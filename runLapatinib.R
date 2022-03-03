@@ -27,6 +27,8 @@ if(!args[[6]]=="Default"){
 	options("PharmacoGx_Max_Perm"=as.numeric(args[[6]]))
 }
 
+
+
 ## Reading in paths from env variables
 
 home <- Sys.getenv("HOME")
@@ -41,6 +43,9 @@ myRunDir <- file.path(project, "runlist_files")
 
 containername <- Sys.getenv("containername", unset=NA_character_)
 
+
+
+
 if(!is.na(containername)){
 	myOutDir <- file.path(containername, myOutDir)
 	myRunDir <- file.path(containername, myRunDir)
@@ -50,6 +55,27 @@ if(!is.na(containername)){
 
 
 }
+
+
+
+badchars <- "[ ]|[/]|[:]|[-]"
+
+make.names.2 <- function(x) return(gsub(pat=badchars, rep=".", x))
+
+
+toRun <- fread(myToRunFileName, header=FALSE)
+
+colnames(toRun) <- c("Gene", "Tissue", "Drug", "PSet")
+
+
+# need to do this "trick" because names are made path safe, and arguments are derived from paths for snakemake's sake 
+toRunThis <- toRun[make.names.2(toRun[,3]) == drug & make.names.2(toRun[,2]) == tissue, ]
+drug <- unique(toRunThis[,3])
+tissue <- unique(toRunThis[,2])
+# pSets <- toRunThis[,4]
+
+print(drug)
+print(tissue)
 
 
 ## Loading in the dataset
@@ -84,6 +110,8 @@ gene_type_col <- ifelse("GeneBioType" %in% colnames(featureInfo(pset, mData)), "
 ## limiting feature space for power
 ft <- rownames(featureInfo(pset, mData))[featureInfo(pset, mData)[[gene_type_col]] == "protein_coding"]
 
+
+
 if(is.na(tissue) || tissue == "all"){
 	chosen.cells <- cellNames(pset)
 } else {
@@ -99,10 +127,6 @@ if(is.na(drug)){
 
 
 # myToRunFileName <- file.path(myRunDir,"geneExpressionMasterToRunList.txt")
-
-toRun <- fread(myToRunFileName, header=FALSE)
-
-colnames(toRun) <- c("Gene", "Tissue", "Drug", "PSet")
 
 filteredFeatureList <- toRun[PSet == psetName, unique(Gene)]
 

@@ -97,7 +97,7 @@ def getFirstStageOutput(wildcards):
 
 
 checkpoint getSigGenes:
-    input: getFirstStageOutput, toRunFile=rules.getFirstStageToRun.output
+    input: getFirstStageOutput, toRunFile=rules.getFirstStageToRun.output, 
     output: runlist_dir + "/toRunMetaByGene.txt"
     params:
         runtime="24:00:00"
@@ -114,15 +114,14 @@ checkpoint getSigGenes:
         """
 
 rule runFirstStage:
-    input: pset_list
+    input: pset_list, toRunFile=masterToRunFile
     params:
         runtime="24:00:00", 
         # pset=lambda wildcards: fst.loc()[wildcards.id][3],
         # drug=lambda wildcards: fst.loc()[wildcards.id][2],
         # tissue=lambda wildcards: fst.loc()[wildcards.id][1],
-        rthreads=20,
         max_number_of_perms=config["max_first_stage_perm"]
-    threads: 1
+    threads: 6
     resources:
         time="24:00:00"
     output: signature_dir + "/signature_{PSet}_{Drug}_{Tissue}.rds"
@@ -134,7 +133,7 @@ rule runFirstStage:
         SCRATCH={scratch_dir} 
 
         MKL_NUM_THREADS=1 MKL_DOMAIN_NUM_THREADS=1 OMP_NUM_THREADS=1 CODE={code_dir}\
-         PROJECT={project_dir} DATA={data_dir} Rscript {code_dir}/runLapatinib.R {wildcards.PSet} "{wildcards.Drug}" '{wildcards.Tissue}' {threads} {masterToRunFile} {params.max_number_of_perms} 
+         PROJECT={project_dir} DATA={data_dir} Rscript {code_dir}/runLapatinib.R {wildcards.PSet} "{wildcards.Drug}" '{wildcards.Tissue}' {threads} {input.toRunFile} {params.max_number_of_perms} 
         """
 
 def outputFromHetTest(wildcards):

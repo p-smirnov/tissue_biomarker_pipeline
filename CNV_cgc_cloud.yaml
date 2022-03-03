@@ -3,6 +3,6 @@ scratch_dir: "scratch"
 project_dir: "Tissue-Biomarker"
 data_dir: "Data/TBPInputs"
 molDataType: "cnv"
-max_first_stage_perm: "Default"
+max_first_stage_perm: 1e8
 code_dir: "."
 julia_working_dir: "/root"
