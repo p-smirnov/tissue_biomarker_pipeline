@@ -1,0 +1,6 @@
+*.so
+*.o
+petrs-biomarker-pipeline
+Data
+.snakemake
+*.txt

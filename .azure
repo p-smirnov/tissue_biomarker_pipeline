@@ -1,0 +1,4 @@
+# Fill in the configuration and run `mv dot_azure .azure`
+region=canada_central
+resgroup=rgUHN_Research_BHKLab_Batch
+stgacct=rguhnresearchbhklabbatch

@@ -1,0 +1,8 @@
+master_table: "AMLgeneExpressionMasterToRunList.txt"
+scratch_dir: "scratch"
+project_dir: "Tissue-Biomarker"
+data_dir: "Data/TBPInputs"
+molDataType: "AML-rna"
+max_first_stage_perm: "1e8"
+code_dir: "code"
+julia_working_dir: "/root"

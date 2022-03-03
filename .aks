@@ -1,0 +1,7 @@
+# Fill in the configuration and run `mv dot_aks .aks`
+clustername=psmirnov-pipeline
+startnodes=3
+minnodes=2
+maxnodes=3
+vmsize=Standard_D2_v4
+containername=petrs-biomarker-pipeline
