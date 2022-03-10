@@ -9,7 +9,7 @@ print(os.getcwd())
 
 masterToRunFile = config["master_table"]
 
-
+localrules: evaluteHeterogeneity
 
 def cUFL(fn):
     fn = [x.replace(' ', '.') for x in fn]
@@ -148,8 +148,9 @@ def outputFromHetTest(wildcards):
 
 
 rule hetTest:
-    input: pset_list
+    input: pset_list, toRunFile=masterToRunFile, metaToRun=rules.getSigGenes.output
     output: "{output_dir}/{Drug}_{Tissue}_{Gene}_hetPerm_10000_out.rds"
+    threads: 1
     params:
         R=10000
     shell:
@@ -161,7 +162,7 @@ rule hetTest:
 
 
         MKL_NUM_THREADS=1 MKL_DOMAIN_NUM_THREADS=1 OMP_NUM_THREADS=1 PROJECT={project_dir} DATA={data_dir}\
-         Rscript {code_dir}/runInterStudyHetPerm.R  {wildcards.Drug} {wildcards.Tissue} {wildcards.Gene} {params.R} > $SCRATCH/InterStudy.out
+         Rscript {code_dir}/runInterStudyHetPerm.R  {wildcards.Drug} {wildcards.Tissue} {wildcards.Gene} {params.R} 
         """
 
 checkpoint evaluteHeterogeneity:
@@ -180,9 +181,12 @@ checkpoint evaluteHeterogeneity:
          Rscript {code_dir}/makeToRunMetaByGeneForBoot.R {params.indir} {params.outdir}
         """
 
+
+
+
 checkpoint outputJuliaData:
     input:  runlist_dir + "/metaHetTestRes.txt", runlist_dir + "/toRunMetaByGene.txt", pset_list
-    output: directory(julia_data_dir)
+    output: julia_data_dir + "/modelData_{Gene}_{Drug}_{Tissue}.csv"
     params:
         runtime="24:00:00",
         outdir = julia_data_dir, 
@@ -196,7 +200,7 @@ checkpoint outputJuliaData:
 
 
         MKL_NUM_THREADS=1 MKL_DOMAIN_NUM_THREADS=1 OMP_NUM_THREADS=1 PROJECT={project_dir} DATA={data_dir} \
-        Rscript {code_dir}/prepareBootDataForJuliaBatch.R  {params.indir} {params.outdir}
+        Rscript {code_dir}/prepareBootDataForJuliaBatch.R  {params.indir} {params.outdir} {wildcards.Gene:q} {wildcards.Drug:q} {wildcards.Tissue:q}
         """
 
 
@@ -207,20 +211,22 @@ rule runJuliaH4H:
         runtime="6:00:00",
         partition="all",
         R=10000, 
-        juliathread= 1, 
+    threads: 6,
     shell:
         """
         #! /bin/bash
         set +u;
         # module load NiaEnv/2019b julia/1.5.3
         SCRATCH={scratch_dir} 
+        mkdir -p $containername/{boot_out_sig}
 
-        JULIA_DEPOT_PATH={julia_working_dir}/.julia julia --project={julia_working_dir} --threads {params.juliathread} \
-        {code_dir}/runMetaBootThreaded.jl {wildcards.Drug} {wildcards.Tissue} {wildcards.Gene} {input} {wildcards.output_dir}
+
+        JULIA_DEPOT_PATH={julia_working_dir}/.julia julia --project={julia_working_dir} --threads {threads} \
+        {code_dir}/runMetaBootThreaded.jl {wildcards.Drug} {wildcards.Tissue} {wildcards.Gene} {input} {output}
         """
 
 rule evaluateJuliaRes:
-    input: [julia_out_dir + "/metaBootRes_{Gene}_{Drug}_{Tissue}_out.txt", julia_data_dir + "/modelData_{Gene}_{Drug}_{Tissue}.csv"]
+    input: bootres=julia_out_dir + "/metaBootRes_{Gene}_{Drug}_{Tissue}_out.txt", bootdata=julia_data_dir + "/modelData_{Gene}_{Drug}_{Tissue}.csv"
     output: "{output_dir}/bootSig_{Gene}_{Drug}_{Tissue}_out.rds"
     params: # todo fix these
         runtime="1:00:00",
@@ -234,8 +240,9 @@ rule evaluateJuliaRes:
         # module load CCEnv  nixpkgs/16.09 gcc/8.3.0 r/4.0.0
         SCRATCH={scratch_dir} 
 
+
         PROJECT={project_dir} DATA={data_dir} \
-        Rscript {code_dir}/evaluateJuliaResults.R {wildcards.Drug} {wildcards.Tissue} {wildcards.Gene} 10000 {julia_data_dir}/modelData_{wildcards.Gene}_{wildcards.Drug}_{wildcards.Tissue}.csv {params.juliaDataDir}/modelData_{wildcards.Gene}_{wildcards.Drug}_{wildcards.Tissue}.csv
+        Rscript {code_dir}/evaluateJuliaResults.R {wildcards.Drug} {wildcards.Tissue} {wildcards.Gene} 10000 {input.bootres} {input.bootdata}
         """
 
 

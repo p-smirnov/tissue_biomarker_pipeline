@@ -25,7 +25,6 @@ containername <- Sys.getenv("containername", unset=NA_character_)
 if(!is.na(containername)){
 	mySigDir <- file.path(containername, mySigDir)
 	myRunDir <- file.path(containername, myRunDir)
-	myToRunFileName <- file.path(containername, myToRunFileName)
 }
 
 

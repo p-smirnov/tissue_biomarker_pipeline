@@ -67,11 +67,13 @@ toRun <- fread(myToRunFileName, header=FALSE)
 
 colnames(toRun) <- c("Gene", "Tissue", "Drug", "PSet")
 
+print(drug)
+print(tissue)
 
 # need to do this "trick" because names are made path safe, and arguments are derived from paths for snakemake's sake 
-toRunThis <- toRun[make.names.2(toRun[,3]) == drug & make.names.2(toRun[,2]) == tissue, ]
-drug <- unique(toRunThis[,3])
-tissue <- unique(toRunThis[,2])
+toRunThis <- toRun[make.names.2(toRun[,Drug]) == drug & make.names.2(toRun[,Tissue]) == tissue, ]
+drug <- unique(toRunThis[,Drug])
+tissue <- unique(toRunThis[,Tissue])
 # pSets <- toRunThis[,4]
 
 print(drug)

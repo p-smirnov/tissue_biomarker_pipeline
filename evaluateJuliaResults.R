@@ -61,8 +61,8 @@ containername <- Sys.getenv("containername", unset=NA_character_)
 if(!is.na(containername)){
     myBootDir <- file.path(containername, myBootDir)
     myPvalDir <- file.path(containername, myPvalDir)
-    myDataFl <- file.path(containername, myDataFl)
-    myInFl <- file.path(containername, myInFl)
+    # myDataFl <- file.path(containername, myDataFl)
+    # myInFl <- file.path(containername, myInFl)
 
 
 }

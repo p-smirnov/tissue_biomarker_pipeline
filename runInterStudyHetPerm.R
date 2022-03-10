@@ -3,8 +3,8 @@ library(meta)
 library(SummarizedExperiment)
 library(coop)
 library(foreach)
-library(doParallel)
-library(doRNG)
+# library(doParallel)
+# library(doRNG)
 library(iterators)
 library(lme4)
 library(data.table)
@@ -52,7 +52,7 @@ containername <- Sys.getenv("containername", unset=NA_character_)
 
 if(!is.na(containername)){
 	myOutDir <- file.path(containername, myOutDir)
-	myRunDir <- file.path(containername, myRunDir)
+	mySigDir <- file.path(containername, mySigDir)
 	myDataDir <- file.path(containername, myDataDir)
 	project <- file.path(containername, project)
 	runlistDir <- file.path(containername, runlistDir)
@@ -126,7 +126,7 @@ runPermutations <- function(beta_obs, errors, model.data, R){
 
 	perm_res <- numeric(R)
 
-	perm_res <- foreach(i =icount(R), .combine=c, .inorder=FALSE) %dorng% {
+	perm_res <- foreach(i =icount(R), .combine=c, .inorder=FALSE) %do% {
 
 		errors_p <- sample(errors)
 

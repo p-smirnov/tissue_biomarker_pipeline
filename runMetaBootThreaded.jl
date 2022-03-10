@@ -13,7 +13,7 @@ gene = ARGS[3]
 
 filePath = ARGS[4]
 
-outPath = ARGS[5]
+outFileName = ARGS[5]
 
 
 # nthread = 1::Int64  #40 threads faster than 80 on niagara
@@ -24,6 +24,7 @@ select!(modelData, Not(:Column1));
 
 
 R = min(modelData[1,:R], 10000000);
+
 select!(modelData, Not(:R));
 
 
@@ -117,13 +118,13 @@ modelData2 = standardizeByDataset(modelData);
 m0 = fit(LinearMixedModel, @formula(y ~ (x + 0| dataset) + x + 0), modelData2);
 t0 = coef(m0)[1];
 
-badchars = r"[,]|[;]|[:]|[-]|[+]|[*]|[%]|[$]|[#]|[{]|[}]|[[]|[]]|[|]|[\^]|[/]|[\\]|[ ]"
+# badchars = r"[,]|[;]|[:]|[-]|[+]|[*]|[%]|[$]|[#]|[{]|[}]|[[]|[]]|[|]|[\^]|[/]|[\\]|[ ]"
 
-tissueClean = replace(tissue, badchars => s".")
+# tissueClean = replace(tissue, badchars => s".")
 
-drugClean = replace(drug, badchars => s".")
+# drugClean = replace(drug, badchars => s".")
 
-outfile = outPath * "/metaBootRes_" * gene  *"_"* drugClean *"_"* tissueClean *"_out.txt" ;
+outfile = outFileName;
 
 open(outfile, "w") do f
     println(f, "t0:");

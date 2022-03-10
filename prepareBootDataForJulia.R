@@ -7,7 +7,7 @@ library(coop)
 # library(doRNG)
 library(iterators)
 library(lme4)
-
+library(data.table)
 library(RhpcBLASctl)
 print(RhpcBLASctl::blas_get_num_procs())
 RhpcBLASctl::blas_set_num_threads(1)
@@ -16,6 +16,7 @@ RhpcBLASctl::blas_set_num_threads(1)
 
 
 args <- commandArgs(trailingOnly = TRUE)
+# myToRunFileName <- args[[1]]
 
 method <- "perm"
 hetTestCutoff <- 0.1
@@ -27,226 +28,256 @@ hetTestCutoff <- 0.1
 
 # drug <- "Lapatinib"
 
+## Asking for 100 times more permutations than the cutoff for alpha 
+corrected_alpha <- 0.05/100
 
 home <- Sys.getenv("HOME")
 scratch <- Sys.getenv("SCRATCH")
 
-myDataDir <-  Sys.getenv("DATA")
-mySigDir <- file.path(scratch, paste0("pearson_",method,"_res"))
-myOutDir <- file.path(scratch, paste0(method, "_meta_bootstrap"))
+
+dataDir <- Sys.getenv("DATA")
+
+myDataDir <- dataDir
+
+
+myOutDir <- args[[2]]
+inDir <- args[[1]]
+
+
+
+
+gene <- args[[3]]
+drug <- args[[4]]
+tissue <- args[[5]]
+
+containername <- Sys.getenv("containername", unset=NA_character_)
+
+if(!is.na(containername)){
+    myOutDir <- file.path(containername, myOutDir)
+    inDir <- file.path(containername, inDir)
+    myDataDir <- file.path(containername, myDataDir)
+
+
+}
+
 
 
 
 loadPSet <- function(psetName, tissue){
 
 
-	switch(psetName, 
-		   CCLE = {
-		   		pset <- readRDS(file.path(myDataDir,"CCLE.rds"))
-		   }, CCLE.CTRPv2 = {
-		   		pset <- readRDS(file.path(myDataDir,"CCLE.CTRPv2.rds"))
-		   }, GDSC_v1 = {
-		   		pset <- readRDS(file.path(myDataDir,"GDSC1.rds"))
-		   }, GDSC_v2 = {
-		   		pset <- readRDS(file.path(myDataDir,"GDSC2.rds"))
-		   }, gCSI = {
-		   		pset <- readRDS(file.path(myDataDir,"gCSI.rds"))
-		   }, GRAY = {
-		   		pset <- readRDS(file.path(myDataDir,"GRAY.rds"))
-		   }, UHNBreast = {
-		   		pset <- readRDS(file.path(myDataDir,"UHNBreast.rds"))
-		   }, {stop("Please Provide a valid pset")})
+    switch(psetName, 
+           CCLE = {
+                pset <- readRDS(file.path(myDataDir,"CCLE.rds"))
+           }, CCLE.CTRPv2 = {
+                pset <- readRDS(file.path(myDataDir,"CCLE.CTRPv2.rds"))
+           }, GDSC_v1 = {
+                pset <- readRDS(file.path(myDataDir,"GDSC1.rds"))
+           }, GDSC_v2 = {
+                pset <- readRDS(file.path(myDataDir,"GDSC2.rds"))
+           }, gCSI = {
+                pset <- readRDS(file.path(myDataDir,"gCSI.rds"))
+           }, GRAY = {
+                pset <- readRDS(file.path(myDataDir,"GRAY.rds"))
+           }, UHNBreast = {
+                pset <- readRDS(file.path(myDataDir,"UHNBreast.rds"))
+           }, Tavor = {
+                pset <- readRDS(file.path(myDataDir, "Tavor.rds"))
+           }, BeatAML = {
+                pset <- readRDS(file.path(myDataDir, "BeatAML.rds"))
+           }, "FIMM-AML-MCM" = {
+            pset <- readRDS(file.path(myDataDir, "FIMM_MCM.rds"))
+           }, {stop("Please Provide a valid pset")})
 
-	mData <- mDataNames(pset)
+    mData <- mDataNames(pset)
 
 
-	gene_type_col <- ifelse("GeneBioType" %in% colnames(featureInfo(pset, mData)), "GeneBioType", "gene_type")
+    gene_type_col <- ifelse("GeneBioType" %in% colnames(featureInfo(pset, mData)), "GeneBioType", "gene_type")
 
-	ft <- rownames(featureInfo(pset, mData))[which(featureInfo(pset, mData)[[gene_type_col]] == "protein_coding")]
+    ft <- rownames(featureInfo(pset, mData))[which(featureInfo(pset, mData)[[gene_type_col]] == "protein_coding")]
 
-	if(is.na(tissue)){
-		chosen.cells <- cellNames(pset)
-	} else {
-		chosen.cells <- cellNames(pset)[which(cellInfo(pset)$tissueid == tissue)]
-	}
+    # if(is.na(tissue)){
+    #   chosen.cells <- cellNames(pset)
+    # } else {
+    #   chosen.cells <- cellNames(pset)[which(cellInfo(pset)$tissueid == tissue)]
+    # }
 
-	return(list(pset = pset, mData = mData, chosen.cells = chosen.cells))
+    return(list(pset = pset, mData = mData))
 }
 
 
+toRunMetaRes <- fread(file=file.path(inDir, "metaHetTestRes.txt"))
 
-getTrange <- function(df){
-	return(qt(0.975, df) - qt(0.025, df))
-}
-
-
-toRunExtended <- read.csv("~/tissueDrugToRunExtended.txt", header=FALSE)
-pSets <- toRunExtended[toRunExtended[,2] == drug & toRunExtended[,3] == tissue, 1]
-
-geneInfo <- read.csv("~/geneInfo.csv")
+toRunByGene <- toRunMetaRes[hetTestRes == TRUE]
 
 
-if(!file.exists(myOutDir)) dir.create(myOutDir)
+myToRunFileName <- file.path(inDir, "toRunMetaByGene.txt")
 
-# fls <- list.files(path=), pattern = paste0("*_", make.names(drug), "_", make.names(tissue), "*"), full.names = TRUE)
-# fls <- paste0(file.path(mySigDir,paste("signature", make.names(pSets), make.names(drug), make.names(tissue), sep="_")), ".rds")
-# sig.list <- sapply(fls, readRDS)
+toRunExtended <- fread(myToRunFileName, header=FALSE)
 
-# genes_to_check <- unique(unlist(sapply(sig.list, function(x) {
-# 	mygenes <- names(which(1==x[,1,"significant"]))
-# 	mygenes <- gsub(mygenes, pat="\\.[0-9]+$", rep="")
-# 	return(mygenes)
-# 	})))
+colnames(toRunExtended) <- c("Gene", "Tissue", "Drug", "PSet", "Significant")
+
+toRunMetaRes <- merge(toRunByGene, toRunExtended, on=c("Gene", "Tissue", "Drug"))
+
+total_gene_list <- toRunExtended[,unique(Gene)]
 
 
-# psetsRequired <- sapply(sig.list, function(x) return(x@PSetName))
+if(!file.exists(myOutDir)) dir.create(myOutDir, recursive = TRUE)
 
-pset.list <- lapply(pSets, loadPSet, tissue=tissue)
+pSets <- unique(toRunExtended[,unique(PSet)])
+
+pset.list <- lapply(pSets, loadPSet)
 names(pset.list) <- pSets
 
+# toRunByGene <- read.csv("~/toRunMetaByGeneBoot.txt", header=FALSE)
 
-getBootSample <- function(model.data, scale=TRUE){
+mol.list <- lapply(pset.list, function(pset.pars){
 
-	sampled.datasets <- sample(unique(model.data$dataset), replace=TRUE)
-	
-	names(sampled.datasets) <- make.unique(sampled.datasets)
+    pset <- pset.pars$pset
+    mData <- pset.pars$mData
 
-	sampled.data <- lapply(names(sampled.datasets), function(dt){
-		sm.dt <- model.data[sample(which(model.data$dataset == sampled.datasets[dt]), replace=TRUE), ]
-		sm.dt$dataset <- dt
-        sm.dt[,1] <- scale(sm.dt[,1])
-        sm.dt[,2] <- scale(sm.dt[,2])
-		return(sm.dt)
-		})
-	sampled.data <- do.call(rbind, sampled.data)
+    mol.prof <- assay(summarizeMolecularProfiles(pset, mData))
 
-	return(sampled.data)
-}
+    return(mol.prof)
 
-bootMeanEffects <- function(model.data,R){
+})
 
-    N <- nrow(model.data)
+names(mol.list) <- names(pset.list)
+sens.list <- lapply(pset.list, function(pset.pars){
 
-    t <- unlist(mclapply(seq_len(R), function(i, model.data) {
-    	library(lme4)
-        test <- getBootSample(model.data)
-        fixedEff <- tryCatch({
-            test.mod <- lmer(y ~ (x + 0| dataset) + x + 0, test, control=lmerControl(check.conv.singular = .makeCC(action = "ignore",  tol = 1e-4)))
-            fixef(test.mod)
+    pset <- pset.pars$pset
+        
+    drug.res <- summarizeSensitivityProfiles(pset, "aac_recomputed")
 
-            }, error = function(e){ NA_real_})
-        fixedEff
-    }, model.data = model.data, mc.cores=nthread))
+    return(drug.res)
+})
 
-
-    ## Calculating t0
-    model.data.scaled <- do.call(rbind, lapply(model.data$dataset, function(dt){
-        sm.dt <- model.data[model.data$dataset == dt,]
-        sm.dt[,1] <- scale(sm.dt[,1])
-        sm.dt[,2] <- scale(sm.dt[,2])
-        return(sm.dt)
-        }))
-
-
-    t0 <- fixef(lmer(y ~ (x + 0| dataset) + x + 0, model.data.scaled))
+names(sens.list) <- names(pset.list)
 
 
 
-	dim(t) <- c(R,1)
-	res <- list(
-	    t0 = t0,
-	    t = t,
-	    R = R,
-	    data = model.data,
-	    seed = seed,
-	    sim = "ordinary",
-	    stype = "i",
-	    call = match.call(),
-	    strata = as.numeric(as.factor(model.data$dataset)),
-	    weights = rep(1/N, N)
-	)
-    attr(res, "class") <- "boot"
-    attr(res, "boot_type") <- "boot"
-    return(res)
-}
+# gene.fls <- list.files(path="~/featureLists/", full.names=TRUE)
+# gene.fls.short <- list.files(path="~/featureLists/")
 
-# gene <- "ENSG00000141736"
+# gene.fls.list <- lapply(gene.fls, readLines)
+# names(gene.fls.list) <- gene.fls.short
+# #1:nrow(toRunByGene)
 
+## TODO:: check that I don't need to filter to only valid tissues here!
+## TODO:: test me
+# for(i in seq_len(nrow(toRunByGene))){
 
-permFixedEffect <- function(model.data, R){
+toRunExtended <- data.frame(toRunExtended)
 
-	# t <- foreach(i =icount(R), .combine=c, .inorder=FALSE) %dorng% {
-	# 	library(RhpcBLASctl)
-	# 	RhpcBLASctl::blas_set_num_threads(1)
- #        x <- model.data[,"x"]
- #        y <- sample(model.data[,"y"])
- #        # coop::pcor(x,y)
- #        cor(x,y)
- #    }
-	t <- unlist(mclapply(seq_len(R), function(i, model.data) {
-        x <- model.data[,"x"]
-        y <- sample(model.data[,"y"])
-        # coop::pcor(x,y)
-        cor(x,y)
-	}, model.data = model.data, mc.cores=nthread))
-    x <- model.data[,"x"]
-	y <- model.data[,"y"]
-    t0 <- coop::pcor(x,y)
-    # t0 <- cor(x,y)
-    return(list(t0 = t0, t = t, R = R, data = model.data))
-}
-
-x.list <- lapply(pset.list, function(pset.pars){
-
-	pset <- pset.pars$pset
-	chosen.cells <- pset.pars$chosen.cells
-	mData <- pset.pars$mData
-
-	mol.prof <- assay(summarizeMolecularProfiles(pset, mData, cell.lines = chosen.cells))
-
-	myx <- grep(gene, rownames(mol.prof))
-
-	if(!length(myx)) return(rep(NA_real_, times=length(pset.pars$chosen.cells)))
-	if(length(myx) > 1) stop(paste0("multiple genes matched:", gene, " id. please investigate"))
-
-	mol.prof <- mol.prof[myx,]
-
-	return(mol.prof)
+# need to do this "trick" because names are made path safe, and arguments are derived from paths for snakemake's sake 
+toRunThis <- toRunExtended[make.names.2(toRunExtended[,3]) == drug & make.names.2(toRunExtended[,2]) == tissue & make.names.2(toRunExtended[,1]) == gene, ]
+drug <- unique(toRunThis[,3])
+tissue <- unique(toRunThis[,2])
+gene <- unique(toRunThis[,1])
+pSetsToRun <- toRunThis[,4]
 
 
-	})
 
-y.list <- lapply(pset.list, function(pset.pars){
-
-	pset <- pset.pars$pset
-	chosen.cells <- pset.pars$chosen.cells
-	
-	drug.res <- summarizeSensitivityProfiles(pset, "aac_recomputed", cell.lines = chosen.cells)[drug,]
+pset.listLocal <- pset.list[pSetsToRun]
 
 
-	return(drug.res)
+x.list <- lapply(pset.listLocal, function(pset.pars){
+
+    pset <- pset.pars$pset
+    if(is.na(tissue)||tissue=="all"){
+        chosen.cells <- cellNames(pset)
+    } else{
+        chosen.cells <- cellNames(pset)[which(cellInfo(pset)$tissueid == tissue)]
+    }
+    mData <- pset.pars$mData
+
+    mol.prof <- mol.list[[name(pset)]]
+    mol.prof <- mol.prof[,chosen.cells]
+
+    if(grepl(pat="ENSG", x=gene)){
+        myx <- grep(paste0("^", gene, "(\\.[0-9]+)?$"), rownames(mol.prof))
+    } else {
+        myx <- grep(paste0("^", gene, "$"), rownames(mol.prof))
+    }  
+
+    if(!length(myx)) return(rep(NA_real_, times=length(chosen.cells)))
+    if(length(myx) > 1) stop(paste0("multiple genes matched:", gene, " id. please investigate"))
+
+    mol.prof <- mol.prof[myx,]
+
+    return(mol.prof)
 
 
-	})
+    })
+
+y.list <- lapply(pset.listLocal, function(pset.pars){
+
+    pset <- pset.pars$pset
+    if(is.na(tissue)||tissue=="all"){
+        chosen.cells <- cellNames(pset)
+    } else{
+        chosen.cells <- cellNames(pset)[which(cellInfo(pset)$tissueid == tissue)]
+    }        
+    drug.res <- sens.list[[name(pset)]][drug,chosen.cells]
+
+
+    return(drug.res)
+
+
+    })
+
+tissue.list <- lapply(pset.listLocal, function(pset.pars){
+
+    pset <- pset.pars$pset
+    if(is.na(tissue)||tissue=="all"){
+        tissue <- cellInfo(pset)$tissueid
+    } else{
+        tissue <- cellInfo(pset)[which(cellInfo(pset)$tissueid == tissue),"tissueid"]
+    }        
+
+    return(tissue)
+
+
+
+    })
+
+
+
+dataset.list <- (lapply(pset.listLocal, function(pset.pars){
+    pset <- pset.pars$pset
+    if(is.na(tissue)||tissue=="all"){
+        chosen.cells <- cellNames(pset)
+    } else{
+        chosen.cells <- cellNames(pset)[which(cellInfo(pset)$tissueid == tissue)]
+    }         
+    return(rep(name(pset.pars$pset), times=length(chosen.cells)))
+
+}))
 
 model.data <- data.frame(x = unlist(x.list),
-						 y = unlist(y.list),
-						 dataset = unlist(lapply(pset.list, function(pset.pars){
-						 	return(rep(name(pset.pars$pset), times=length(pset.pars$chosen.cells)))
-						 	})))
+                         y = unlist(y.list),
+                         dataset = unlist(dataset.list),
+                         tissueid = unlist(tissue.list))
 
 
 model.data <- model.data[complete.cases(model.data),]
 
 
+# gene.fls.this <- paste0(make.names(tissue), ".", make.names(pSetsToRun), ".csv")
+# total_gene_list <- .unionList(gene.fls.list[gene.fls.this])
 
-gene.fls <- paste0("~/featureLists/", make.names(tissue), ".", make.names(pSets), ".csv")
-total_gene_list <- .unionList(lapply(gene.fls, readLines))
-corrected_alpha <- corrected_alpha/length(total_gene_list)
+corrected_alpha.this <- corrected_alpha/length(total_gene_list)
 
-R <- ceiling(1/corrected_alpha)
-rm(pset.list, y.list, x.list)
-gc()
+R <- ceiling(1/corrected_alpha.this)
+model.data$R <- R
+
+
+write.csv(model.data, file=file.path(myOutDir,  make.names(paste0("modelData_", gene, "_", drug, "_", tissue, ".csv"))))
+#     if(!i%%100) print(i)
+# }
+
+
+
 
 
 
