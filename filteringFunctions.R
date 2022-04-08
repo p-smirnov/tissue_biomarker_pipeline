@@ -1,5 +1,6 @@
 
-standardizeRawDataConcRange <- function(sens.info, sens.raw){
+standardizeRawDataConcRange <- function(sens.info, sens.raw, 
+  pointwise.tolerance.fraction=1.1, min.points.per.curve=5){
   unq.drugs <- unique(sens.info$drugid)
   
   conc.m <- data.table(melt(sens.raw[,,1], as.is=TRUE))
@@ -54,7 +55,8 @@ standardizeRawDataConcRange <- function(sens.info, sens.raw){
   ## NOTE:: being aware of which conditions overlap, but its fast enough right now as it is.
   chosen.drug.ranges <- lapply(unq.drugs, function(drug){
     num.points.in.range <- apply(per.drug.range.indicies.dt[drugid==drug, .(l,r)], 1, function(rng){
-      conc.m[drugid==drug][conc.ranges[drugid==drug][l<=rng["l"]][r>=rng["r"],Var1], on="Var1"][value >= rng["l"]][value <= rng["r"],.N]
+      conc.m[drugid==drug][conc.ranges[drugid==drug][l<=rng["l"]][r>=rng["r"],Var1], 
+            on="Var1"][value >= rng["l"]/pointwise.tolerance.fraction][value <= rng["r"]*pointwise.tolerance.fraction,.N]
       # conc.m[drugid==drug][, Var1]
     })
     max.ranges <- per.drug.range.indicies.dt[drugid==drug][which(num.points.in.range==max(num.points.in.range))]
@@ -75,16 +77,25 @@ standardizeRawDataConcRange <- function(sens.info, sens.raw){
     rng <- unlist(chosen.drug.ranges[[drug]][,.(l,r)])
     myx <- conc.ranges.kept[drugid==drug,Var1]
     doses <- sens.raw[myx, ,"Dose"]
-    which.remove <- (doses < rng["l"] | doses > rng["r"])
+    which.remove <- (doses < rng["l"]/pointwise.tolerance.fraction | doses > rng["r"]*pointwise.tolerance.fraction)
     sens.raw[myx, ,"Dose"][which(which.remove,arr.ind=TRUE)] <- NA_real_
     sens.raw[myx, ,"Viability"][which(which.remove,arr.ind=TRUE)] <- NA_real_
     
     ## Annotate sens info with chosen range
     sens.info[sens.info$drugid==drug,"chosen.min.range"] <- rng["l"]
     sens.info[sens.info$drugid==drug,"chosen.max.range"] <- rng["r"]
+    sens.info[sens.info$drugid==drug,"chosen.range.tolerance.par"] <- pointwise.tolerance.fraction
+    sens.info[myx,"num.points.removed"] <- rowSums(which.remove)
   }
   sens.info$rm.by.conc.range <- FALSE
   sens.info[removed.experiments,"rm.by.conc.range"] <- TRUE
+
+  remove.by.min.points <- apply(sens.raw[,,2], 1, function(x) return(sum(!is.na(x))))<min.points.per.curve
+  sens.raw[remove.by.min.points,,] <- NA_real_
+  sens.info$rm.by.min.points <- FALSE
+  sens.info[remove.by.min.points,"rm.by.min.points"] <- TRUE
+
+
   
   return(list("sens.info" = sens.info, sens.raw = sens.raw))
 }

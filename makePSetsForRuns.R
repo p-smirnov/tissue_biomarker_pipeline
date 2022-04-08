@@ -270,6 +270,41 @@ saveRDS(UHNBreast, file=file.path(filteredDir, "UHNBreast.rds"))
 
 
 
+
+
+PRISM <- readRDS(file.path(inputDir, "PRISM.rds"))
+
+PRISM.filtered.sens <- standardizeRawDataConcRange(PRISM@sensitivity$info, PRISM@sensitivity$raw)
+
+PRISM.filtered.profiles.list <- PharmacoGx:::.calculateFromRaw(raw.sensitivity=PRISM.filtered.sens$sens.raw,
+																nthread=12, cap=100, family="normal")
+
+PRISM.filtered.profiles <- data.frame("aac_recomputed" = PRISM.filtered.profiles.list$AUC, "ic50_recomputed" = PRISM.filtered.profiles.list$IC50)
+PRISM.filtered.profiles.pars <- do.call(rbind,PRISM.filtered.profiles.list$pars)
+PRISM.filtered.profiles.pars <- apply(PRISM.filtered.profiles.pars, c(1,2), unlist)
+
+PRISM.filtered.profiles <- cbind(PRISM.filtered.profiles,PRISM.filtered.profiles.pars)
+
+stopifnot(all.equal(rownames(PRISM.filtered.profiles), rownames(PRISM.filtered.sens$sens.info)))
+
+PRISM@sensitivity$info <- PRISM.filtered.sens$sens.info
+PRISM@sensitivity$raw <- PRISM.filtered.sens$sens.raw
+PRISM@sensitivity$profiles <- PRISM.filtered.profiles
+
+
+
+test <- filterNoisyCurves2(PRISM)
+
+PRISM@sensitivity$profiles[test$noisy,c("aac_recomputed","ic50_recomputed")] <- NA_real_
+PRISM@sensitivity$info$noisy.curve <- FALSE
+PRISM@sensitivity$info[test$noisy,"noisy.curve"] <- TRUE
+
+
+
+saveRDS(PRISM, file=file.path(filteredDir, "PRISM.rds"))
+
+
+
 source("mergePSets.R")
 
 ## First, lets make the CTRPv2/CCLE combo pset for RNA and CNV
