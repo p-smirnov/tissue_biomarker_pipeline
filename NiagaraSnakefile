@@ -84,7 +84,7 @@ checkpoint getFirstStageToRun:
 print(signature_dir)
 
 def getFirstStageOutput(wildcards):
-    with checkpoints.getFirstStageToRun.get(**wildcards).output[0].open() as f:
+    with masterToRunFile as f:
         master_table  = pd.read_csv(f, header=None)
         # pd.read_csv("/cluster/projects/bhklab/Projects/Tissue_Biomarker_Meta/runlist_files/geneExpressionMasterToRunList.txt", header=None)
         fst = master_table.drop_duplicates([1,2,3])[[1,2,3]]
@@ -98,7 +98,7 @@ def getFirstStageOutput(wildcards):
 
 
 checkpoint getSigGenes:
-    input: getFirstStageOutput, toRunFile=rules.getFirstStageToRun.output, 
+    input: getFirstStageOutput
     output: runlist_dir + "/toRunMetaByGene.txt"
     params:
         runtime="24:00:00"
