@@ -64,8 +64,9 @@ boot_out_sig = project_dir + "/perm_meta_boot_sig"
 perm_out_sig = project_dir + "/perm_meta_perm_sig"
 
 
-pset_list = ['Data/TBPInputs/cnv/CCLE.CTRPv2.rds', 'Data/TBPInputs/cnv/gCSI.rds', 'Data/TBPInputs/cnv/GDSC2.rds']
-print(pset_list)
+# pset_list = ['Data/TBPInputs/cnv/CCLE.CTRPv2.rds', 'Data/TBPInputs/cnv/gCSI.rds', 'Data/TBPInputs/cnv/GDSC2.rds']
+# print(pset_list)
+pset_list=config['pset_list']
 
 checkpoint getFirstStageToRun:
     input: masterToRunFile
