@@ -95,7 +95,9 @@ loadPSet <- function(psetName, tissue){
 			pset <- readRDS(file.path(myDataDir,"CCLE.rds"))
 		}, CCLE.CTRPv2 = {
 			pset <- readRDS(file.path(myDataDir,"CCLE.CTRPv2.rds"))
-		}, GDSC_v1 = {
+		}, CCLE.PRISM = {
+	  	pset <- readRDS(file.path(myDataDir,"CCLE.PRISM.rds"))
+	  }, GDSC_v1 = {
 			pset <- readRDS(file.path(myDataDir,"GDSC1.rds"))
 		}, GDSC_v2 = {
 			pset <- readRDS(file.path(myDataDir,"GDSC2.rds"))
