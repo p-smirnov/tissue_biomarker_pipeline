@@ -68,7 +68,6 @@ perm_out_sig = project_dir + "/perm_meta_perm_sig"
 # print(pset_list)
 pset_list=config['pset_list']
 
-localrules: getFirstStageToRun
 
 checkpoint getFirstStageToRun:
     input: masterToRunFile
@@ -84,6 +83,9 @@ checkpoint getFirstStageToRun:
         cp {input} {output}
         """
 print(signature_dir)
+
+localrules: getFirstStageToRun
+
 
 def getFirstStageOutput(wildcards):
     with checkpoints.getFirstStageToRun.get(**wildcards).output[0].open() as f:
