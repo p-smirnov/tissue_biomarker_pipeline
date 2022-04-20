@@ -68,6 +68,8 @@ perm_out_sig = project_dir + "/perm_meta_perm_sig"
 # print(pset_list)
 pset_list=config['pset_list']
 
+localrules: getFirstStageToRun
+
 checkpoint getFirstStageToRun:
     input: masterToRunFile
     output: masterToRunFile 
@@ -83,8 +85,8 @@ checkpoint getFirstStageToRun:
         """
 print(signature_dir)
 
-def getFirstStageOutput(x):
-    with masterToRunFile as f:
+def getFirstStageOutput(wildcards):
+    with checkpoints.getFirstStageToRun.get(**wildcards).output[0].open() as f:
         master_table  = pd.read_csv(f, header=None)
         # pd.read_csv("/cluster/projects/bhklab/Projects/Tissue_Biomarker_Meta/runlist_files/geneExpressionMasterToRunList.txt", header=None)
         fst = master_table.drop_duplicates([1,2,3])[[1,2,3]]
@@ -98,7 +100,7 @@ def getFirstStageOutput(x):
 
 
 checkpoint getSigGenes:
-    input: getFirstStageOutput
+    input: getFirstStageToRun, getFirstStageOutput
     output: runlist_dir + "/toRunMetaByGene.txt"
     params:
         runtime="24:00:00"
