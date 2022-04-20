@@ -9,7 +9,7 @@ scratch <- Sys.getenv("SCRATCH")
 
 myDataDir <- file.path(home, "Data", "TBPInputs", "rna")
 
-CCLE <- readRDS(file.path(myDataDir,"CCLE.rds"))
+PRISM <- readRDS(file.path(myDataDir,"CCLE.PRISM.rds"))
 CTRPv2 <- readRDS(file.path(myDataDir,"CCLE.CTRPv2.rds"))
 GDSC1 <- readRDS(file.path(myDataDir,"GDSC1.rds"))
 GDSC2 <- readRDS(file.path(myDataDir,"GDSC2.rds"))
@@ -17,7 +17,7 @@ gCSI <- readRDS(file.path(myDataDir,"gCSI.rds"))
 GRAY <- readRDS(file.path(myDataDir,"GRAY.rds"))
 UHNBreast <- readRDS(file.path(myDataDir,"UHNBreast.rds"))
 
-pset.list <- list(CCLE, CTRPv2, GDSC1, GDSC2, GRAY, UHNBreast, gCSI)
+pset.list <- list(PRISM, CTRPv2, GDSC1, GDSC2, GRAY, UHNBreast, gCSI)
 
 names(pset.list) <- sapply(pset.list, name)
 
@@ -161,25 +161,58 @@ sens.num.dt.filt.split <- split(sens.num.dt.filt, by="tissueid")
 
 all.dt.list <- list()
 
-for(tissue in names(pset.genexp.dt.split)){
+## For each drug, gene, tissue, I need to check that there are 20 cell lines in at least 3 psets. 
 
 
-	pset.genexp.dt.split[[tissue]]
-	all.dt.tissue <-merge(pset.genexp.dt.split[[tissue]], sens.num.dt.filt.split[[tissue]], by=c("cellid", "PSet", "tissueid"),allow.cartesian=TRUE)
 
-	all.dt.tissue <- merge(all.dt.tissue, all.dt.tissue[,.N, .(Drug, geneid, tissueid, PSet)][N>=20,], by=c("Drug", "tissueid", "geneid", "PSet"))
+sens.num.dt.filt[,Drug:=droplevels(Drug)]
+
+sens.num.dt.filt.split <- split(sens.num.dt.filt, by="Drug")
+
+
+for(drug in names(sens.num.dt.filt.split)){
+
+
+
+
+	sens.num.dt.filt.split[[drug]]
+
+	# pset.genexp.dt.split.psets <- split(pset.genexp.dt.split[[tissue]], by="PSet")
+	# sens.num.dt.filt.split.psets <- split(sens.num.dt.filt.split[[tissue]], by="PSet")
+
+
+
+	# all.dt.tissue <- rbindlist(lapply(names(pset.genexp.dt.split.psets), function(pset){
+	# 	pset.genexp.this <- pset.genexp.dt.split.psets[[pset]]
+	# 	sens.num.this <- sens.num.dt.filt.split.psets[[pset]]
+
+	# 	all.dt.tissue <-merge(pset.genexp.this, sens.num.this, by=c("cellid", "PSet", "tissueid"),allow.cartesian=TRUE)
+
+	# 	all.dt.tissue <- merge(all.dt.tissue, all.dt.tissue[,.N, .(Drug, geneid, tissueid, PSet)][N>=20,], by=c("Drug", "tissueid", "geneid", "PSet"))
+
+
+	# }))
+
+	# rm(pset.genexp.dt.split.psets)
+	# rm(sens.num.dt.filt.split.psets)
+
+
+	all.dt.drug <-merge(pset.genexp.dt, sens.num.dt.filt.split[[drug]], by=c("cellid", "PSet", "tissueid"),allow.cartesian=TRUE)
+
+	all.dt.drug <- merge(all.dt.drug, all.dt.drug[,.N, .(Drug, geneid, tissueid, PSet)][N>=20,], by=c("Drug", "tissueid", "geneid", "PSet"))
 	### now that I am sure there are 20 samples per pset for each drug, gene, tissue triplet, I can drop the cellid column
 
-	all.dt.tissue[,cellid:=NULL]
+	all.dt.drug[,cellid:=NULL]
 
-	all.dt.tissue[,N:=NULL]
+	all.dt.drug[,N:=NULL]
 
-	all.dt.tissue <- unique(all.dt.tissue)
+	all.dt.drug <- unique(all.dt.drug)
 
-	all.dt.tissue <- merge(all.dt.tissue, all.dt.tissue[,.N, .(geneid, tissueid, Drug)][N >= 3], by=c("geneid", "tissueid", "Drug"))
+	all.dt.drug <- merge(all.dt.drug, all.dt.drug[,.N, .(geneid, tissueid, Drug)][N >= 3], by=c("geneid", "tissueid", "Drug"))
 
-	all.dt.list[[tissue]] <- all.dt.tissue
+	all.dt.list[[drug]] <- all.dt.drug
 	gc()
+	print(drug)
 }
 
 

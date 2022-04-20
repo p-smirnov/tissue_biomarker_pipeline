@@ -4,6 +4,7 @@ library(data.table)
 library(reshape2)
 library(CoreGx)
 library(SummarizedExperiment)
+library(parallel)
 
 source('filteringFunctions.R')
 ## This file does a few things: first of all, it takes unfiltered versoins of psets, and runs
@@ -30,7 +31,7 @@ CTRPv2 <- readRDS(file.path(inputDir, "CTRPv2.rds"))
 CTRPv2.filtered.sens <- standardizeRawDataConcRange(CTRPv2@sensitivity$info, CTRPv2@sensitivity$raw)
 
 CTRPv2.filtered.profiles.list <- PharmacoGx:::.calculateFromRaw(raw.sensitivity=CTRPv2.filtered.sens$sens.raw,
-																nthread=20, cap=100, family="normal")
+																nthread=12, cap=100, family="normal")
 CTRPv2.filtered.profiles <- data.frame("aac_recomputed" = CTRPv2.filtered.profiles.list$AUC, "ic50_recomputed" = CTRPv2.filtered.profiles.list$IC50)
 CTRPv2.filtered.profiles.pars <- do.call(rbind,CTRPv2.filtered.profiles.list$pars)
 CTRPv2.filtered.profiles.pars <- apply(CTRPv2.filtered.profiles.pars, c(1,2), unlist)
@@ -133,7 +134,7 @@ GDSC2 <- readRDS(file.path(inputDir, "GDSC2.rds"))
 GDSC2.filtered.sens <- standardizeRawDataConcRange(GDSC2@sensitivity$info, GDSC2@sensitivity$raw)
 
 GDSC2.filtered.profiles.list <- PharmacoGx:::.calculateFromRaw(raw.sensitivity=GDSC2.filtered.sens$sens.raw,
-																nthread=20, cap=100, family="normal")
+																nthread=12, cap=100, family="normal")
 
 GDSC2.filtered.profiles <- data.frame("aac_recomputed" = GDSC2.filtered.profiles.list$AUC, "ic50_recomputed" = GDSC2.filtered.profiles.list$IC50)
 GDSC2.filtered.profiles.pars <- do.call(rbind,GDSC2.filtered.profiles.list$pars)
@@ -315,10 +316,13 @@ outDirCNV <- "~/Data/TBPInputs/cnv/"
 
 CCLE <- readRDS(file.path(filteredDir, "CCLE.rds"))
 CTRPv2 <- readRDS(file.path(filteredDir, "CTRPv2.rds"))
+PRISM <- readRDS(file.path(filteredDir, "PRISM.rds"))
+
 
 CCLE.microarray <- CCLE
 CCLE.microarray@molecularProfiles <- CCLE.microarray@molecularProfiles["rna"]
-saveRDS(CCLE.microarray, file=file.path(outDirRNA, "CCLE.rds"))
+CCLE.PRISM <- mergePSets(CCLE.microarray, PRISM)
+saveRDS(CCLE.PRISM, file=file.path(outDirRNA, "CCLE.PRISM.rds"))
 
 CCLE.rnaseq <- CCLE
 CCLE.rnaseq@molecularProfiles <- CCLE.rnaseq@molecularProfiles["Kallisto_0.46.1.rnaseq"]
@@ -326,10 +330,10 @@ CCLE.CTRPv2 <- mergePSets(CCLE.rnaseq, CTRPv2)
 saveRDS(CCLE.CTRPv2, file=file.path(outDirRNA, "CCLE.CTRPv2.rds"))
 
 
-CCLE.cnv <- CCLE
-CCLE.cnv@molecularProfiles <- CCLE@molecularProfiles['cnv']
-CCLE.CTRPv2.cnv <- mergePSets(CCLE.cnv, CTRPv2)
-saveRDS(CCLE.CTRPv2.cnv, file=file.path(outDirCNV, "CCLE.CTRPv2.rds"))
+# CCLE.cnv <- CCLE
+# CCLE.cnv@molecularProfiles <- CCLE@molecularProfiles['cnv']
+# CCLE.CTRPv2.cnv <- mergePSets(CCLE.cnv, CTRPv2)
+# saveRDS(CCLE.CTRPv2.cnv, file=file.path(outDirCNV, "CCLE.CTRPv2.rds"))
 
 
 
@@ -350,9 +354,9 @@ GDSC2.rna@molecularProfiles <- GDSC2.rna@molecularProfiles["rna"]
 
 saveRDS(GDSC2.rna, file=file.path(outDirRNA,"GDSC2.rds"))
 
-GDSC2.cnv <- GDSC2
-GDSC2.cnv@molecularProfiles <- GDSC2.cnv@molecularProfiles["cnv"]
-saveRDS(GDSC2.cnv, file=file.path(outDirCNV,"GDSC2.rds"))
+# GDSC2.cnv <- GDSC2
+# GDSC2.cnv@molecularProfiles <- GDSC2.cnv@molecularProfiles["cnv"]
+# saveRDS(GDSC2.cnv, file=file.path(outDirCNV,"GDSC2.rds"))
 
 
 
@@ -363,10 +367,10 @@ gCSI.rna@molecularProfiles <- gCSI.rna@molecularProfiles["Kallisto_0.46.1.rnaseq
 
 saveRDS(gCSI.rna, file=file.path(outDirRNA,"gCSI.rds"))
 
-gCSI.cnv <- gCSI
-gCSI.cnv@molecularProfiles <- gCSI.cnv@molecularProfiles["cnv"]
+# gCSI.cnv <- gCSI
+# gCSI.cnv@molecularProfiles <- gCSI.cnv@molecularProfiles["cnv"]
 
-saveRDS(gCSI.cnv, file=file.path(outDirCNV,"gCSI.rds"))
+# saveRDS(gCSI.cnv, file=file.path(outDirCNV,"gCSI.rds"))
 
 
 
@@ -388,44 +392,44 @@ saveRDS(UHNBreast.rna, file=file.path(outDirRNA,"UHNBreast.rds"))
 ## remapping gene names to ENSG ids for CNV
 
 
-library(SummarizedExperiment)
+# library(SummarizedExperiment)
 
-CCLE.CTRPv2.cnv <- readRDS(file.path(outDirCNV, "CCLE.CTRPv2.rds"))
-
-
-myx <- !is.na(rowData(CCLE.CTRPv2.cnv@molecularProfiles$cnv)$EnsemblGeneId)
-
-CCLE.CTRPv2.cnv@molecularProfiles$cnv <- CCLE.CTRPv2.cnv@molecularProfiles$cnv[myx,]
-
-stopifnot(all(!duplicated(rowData(CCLE.CTRPv2.cnv@molecularProfiles$cnv)$EnsemblGeneId)))
-
-rownames(CCLE.CTRPv2.cnv@molecularProfiles$cnv) <- rowData(CCLE.CTRPv2.cnv@molecularProfiles$cnv)$EnsemblGeneId
-
-saveRDS(CCLE.CTRPv2.cnv, file=file.path(outDirCNV, "CCLE.CTRPv2.rds"))
+# CCLE.CTRPv2.cnv <- readRDS(file.path(outDirCNV, "CCLE.CTRPv2.rds"))
 
 
-GDSC2.cnv <- readRDS(file.path(outDirCNV,"GDSC2.rds"))
+# myx <- !is.na(rowData(CCLE.CTRPv2.cnv@molecularProfiles$cnv)$EnsemblGeneId)
+
+# CCLE.CTRPv2.cnv@molecularProfiles$cnv <- CCLE.CTRPv2.cnv@molecularProfiles$cnv[myx,]
+
+# stopifnot(all(!duplicated(rowData(CCLE.CTRPv2.cnv@molecularProfiles$cnv)$EnsemblGeneId)))
+
+# rownames(CCLE.CTRPv2.cnv@molecularProfiles$cnv) <- rowData(CCLE.CTRPv2.cnv@molecularProfiles$cnv)$EnsemblGeneId
+
+# saveRDS(CCLE.CTRPv2.cnv, file=file.path(outDirCNV, "CCLE.CTRPv2.rds"))
 
 
-myx <- !is.na(rowData(GDSC2.cnv@molecularProfiles$cnv)$EnsemblGeneId)
-
-GDSC2.cnv@molecularProfiles$cnv <- GDSC2.cnv@molecularProfiles$cnv[myx,]
-
-stopifnot(all(!duplicated(rowData(GDSC2.cnv@molecularProfiles$cnv)$EnsemblGeneId)))
-
-rownames(GDSC2.cnv@molecularProfiles$cnv) <- rowData(GDSC2.cnv@molecularProfiles$cnv)$EnsemblGeneId
-
-saveRDS(GDSC2.cnv, file=file.path(outDirCNV, "GDSC2.rds"))
+# GDSC2.cnv <- readRDS(file.path(outDirCNV,"GDSC2.rds"))
 
 
-gCSI.cnv <- readRDS(file.path(outDirCNV, "gCSI.rds"))
+# myx <- !is.na(rowData(GDSC2.cnv@molecularProfiles$cnv)$EnsemblGeneId)
 
-myx <- !is.na(rowData(gCSI.cnv@molecularProfiles$cnv)$EnsemblGeneId)
+# GDSC2.cnv@molecularProfiles$cnv <- GDSC2.cnv@molecularProfiles$cnv[myx,]
 
-gCSI.cnv@molecularProfiles$cnv <- gCSI.cnv@molecularProfiles$cnv[myx,]
+# stopifnot(all(!duplicated(rowData(GDSC2.cnv@molecularProfiles$cnv)$EnsemblGeneId)))
 
-stopifnot(all(!duplicated(rowData(gCSI.cnv@molecularProfiles$cnv)$EnsemblGeneId)))
+# rownames(GDSC2.cnv@molecularProfiles$cnv) <- rowData(GDSC2.cnv@molecularProfiles$cnv)$EnsemblGeneId
 
-rownames(gCSI.cnv@molecularProfiles$cnv) <- rowData(gCSI.cnv@molecularProfiles$cnv)$EnsemblGeneId
+# saveRDS(GDSC2.cnv, file=file.path(outDirCNV, "GDSC2.rds"))
 
-saveRDS(gCSI.cnv, file=file.path(outDirCNV, "gCSI.rds"))
+
+# gCSI.cnv <- readRDS(file.path(outDirCNV, "gCSI.rds"))
+
+# myx <- !is.na(rowData(gCSI.cnv@molecularProfiles$cnv)$EnsemblGeneId)
+
+# gCSI.cnv@molecularProfiles$cnv <- gCSI.cnv@molecularProfiles$cnv[myx,]
+
+# stopifnot(all(!duplicated(rowData(gCSI.cnv@molecularProfiles$cnv)$EnsemblGeneId)))
+
+# rownames(gCSI.cnv@molecularProfiles$cnv) <- rowData(gCSI.cnv@molecularProfiles$cnv)$EnsemblGeneId
+
+# saveRDS(gCSI.cnv, file=file.path(outDirCNV, "gCSI.rds"))
