@@ -71,7 +71,7 @@ pset_list=config['pset_list']
 
 checkpoint getFirstStageToRun:
     input: masterToRunFile
-    output: masterToRunFile + 2 
+    output: masterToRunFile + "2" 
     params:
         runtime="1:00:00"
     resources:
