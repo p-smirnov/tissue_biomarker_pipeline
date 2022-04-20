@@ -83,7 +83,7 @@ checkpoint getFirstStageToRun:
         """
 print(signature_dir)
 
-def getFirstStageOutput():
+def getFirstStageOutput(x):
     with masterToRunFile as f:
         master_table  = pd.read_csv(f, header=None)
         # pd.read_csv("/cluster/projects/bhklab/Projects/Tissue_Biomarker_Meta/runlist_files/geneExpressionMasterToRunList.txt", header=None)
