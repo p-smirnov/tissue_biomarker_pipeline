@@ -126,7 +126,7 @@ rule runFirstStage:
         # drug=lambda wildcards: fst.loc()[wildcards.id][2],
         # tissue=lambda wildcards: fst.loc()[wildcards.id][1],
         max_number_of_perms=config["max_first_stage_perm"]
-    threads: 6
+    threads: 40
     resources:
         time="24:00:00"
     output: signature_dir + "/signature_{PSet}_{Drug}_{Tissue}.rds"
@@ -216,7 +216,7 @@ rule runJuliaH4H:
         runtime="6:00:00",
         partition="all",
         R=10000, 
-    threads: 6,
+    threads: 40,
     shell:
         """
         #! /bin/bash
