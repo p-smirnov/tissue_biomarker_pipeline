@@ -1,0 +1,7 @@
+master_table: "/scratch/b/bhaibeka/psmirnov/Tissue_Biomarker/rna/runlist_files/geneExpressionMasterToRunListPriority.txt"
+scratch_dir: "/scratch/b/bhaibeka/psmirnov"
+project_dir: "/scratch/b/bhaibeka/psmirnov/Tissue_Biomarker"
+data_dir: "~/Data/TBPInputs"
+molDataType: "rna"
+code_dir: "/scratch/b/bhaibeka/psmirnov/tissue_biomarker_pipeline"
+julia_working_dir: "/scratch/b/bhaibeka/psmirnov"
