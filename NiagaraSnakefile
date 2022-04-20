@@ -102,7 +102,7 @@ def getFirstStageOutput(wildcards):
 
 
 checkpoint getSigGenes:
-    input: getFirstStageToRun, getFirstStageOutput
+    input: rules.getFirstStageToRun.output, getFirstStageOutput
     output: runlist_dir + "/toRunMetaByGene.txt"
     params:
         runtime="24:00:00"
