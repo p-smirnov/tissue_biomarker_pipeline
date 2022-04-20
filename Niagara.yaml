@@ -6,3 +6,10 @@ molDataType: "rna"
 code_dir: "/scratch/b/bhaibeka/psmirnov/tissue_biomarker_pipeline"
 julia_working_dir: "/scratch/b/bhaibeka/psmirnov"
 max_first_stage_perm: "Default"
+pset_list: ['~/Data/TBPInputs/rna/CCLE.CTRPv2.rds', 
+            '~/Data/TBPInputs/rna/CCLE.PRISM.rds', 
+            '~/Data/TBPInputs/rna/GDSC1.rds',
+            '~/Data/TBPInputs/rna/GDSC2.rds',
+            '~/Data/TBPInputs/rna/gCSI.rds',
+            '~/Data/TBPInputs/rna/GRAY.rds',
+            '~/Data/TBPInputs/rna/UHNBreast.rds']
