@@ -189,7 +189,7 @@ checkpoint evaluteHeterogeneity:
 
 checkpoint outputJuliaData:
     input:  runlist_dir + "/metaHetTestRes.txt", runlist_dir + "/toRunMetaByGene.txt", pset_list
-    output: julia_data_dir + "/modelData_{Gene}_{Drug}_{Tissue}.csv"
+    output: directory(julia_data_dir)
     params:
         runtime="24:00:00",
         outdir = julia_data_dir, 
