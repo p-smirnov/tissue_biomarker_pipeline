@@ -31,7 +31,7 @@ CTRPv2 <- readRDS(file.path(inputDir, "CTRPv2.rds"))
 CTRPv2.filtered.sens <- standardizeRawDataConcRange(CTRPv2@sensitivity$info, CTRPv2@sensitivity$raw)
 
 CTRPv2.filtered.profiles.list <- PharmacoGx:::.calculateFromRaw(raw.sensitivity=CTRPv2.filtered.sens$sens.raw,
-																nthread=12, cap=100, family="normal")
+																nthread=12, cap=NA, family="normal")
 CTRPv2.filtered.profiles <- data.frame("aac_recomputed" = CTRPv2.filtered.profiles.list$AUC, "ic50_recomputed" = CTRPv2.filtered.profiles.list$IC50)
 CTRPv2.filtered.profiles.pars <- do.call(rbind,CTRPv2.filtered.profiles.list$pars)
 CTRPv2.filtered.profiles.pars <- apply(CTRPv2.filtered.profiles.pars, c(1,2), unlist)
@@ -56,13 +56,18 @@ saveRDS(CTRPv2, file=file.path(filteredDir, "CTRPv2.rds"))
 
 
 
+rm(CTRPv2)
+gc()
+
+
+
 
 GRAY <- readRDS(file.path(inputDir, "GRAY2017.rds"))
 
 GRAY.filtered.sens <- standardizeRawDataConcRange(GRAY@sensitivity$info, GRAY@sensitivity$raw)
 
 GRAY.filtered.profiles.list <- PharmacoGx:::.calculateFromRaw(raw.sensitivity=GRAY.filtered.sens$sens.raw,
-																nthread=20, cap=100, family="normal")
+																nthread=20, cap=NA, family="normal")
 GRAY.filtered.profiles <- data.frame("aac_recomputed" = GRAY.filtered.profiles.list$AUC, "ic50_recomputed" = GRAY.filtered.profiles.list$IC50)
 GRAY.filtered.profiles.pars <- do.call(rbind,GRAY.filtered.profiles.list$pars)
 GRAY.filtered.profiles.pars <- apply(GRAY.filtered.profiles.pars, c(1,2), unlist)
@@ -96,7 +101,7 @@ GDSC1 <- readRDS(file.path(inputDir, "GDSC1.rds"))
 GDSC1.filtered.sens <- standardizeRawDataConcRange(GDSC1@sensitivity$info, GDSC1@sensitivity$raw)
 
 GDSC1.filtered.profiles.list <- PharmacoGx:::.calculateFromRaw(raw.sensitivity=GDSC1.filtered.sens$sens.raw,
-																nthread=12, cap=100, family="normal")
+																nthread=12, cap=NA, family="normal")
 
 GDSC1.filtered.profiles <- data.frame("aac_recomputed" = GDSC1.filtered.profiles.list$AUC, "ic50_recomputed" = GDSC1.filtered.profiles.list$IC50)
 GDSC1.filtered.profiles.pars <- do.call(rbind,GDSC1.filtered.profiles.list$pars)
@@ -134,7 +139,7 @@ GDSC2 <- readRDS(file.path(inputDir, "GDSC2.rds"))
 GDSC2.filtered.sens <- standardizeRawDataConcRange(GDSC2@sensitivity$info, GDSC2@sensitivity$raw)
 
 GDSC2.filtered.profiles.list <- PharmacoGx:::.calculateFromRaw(raw.sensitivity=GDSC2.filtered.sens$sens.raw,
-																nthread=12, cap=100, family="normal")
+																nthread=12, cap=NA, family="normal")
 
 GDSC2.filtered.profiles <- data.frame("aac_recomputed" = GDSC2.filtered.profiles.list$AUC, "ic50_recomputed" = GDSC2.filtered.profiles.list$IC50)
 GDSC2.filtered.profiles.pars <- do.call(rbind,GDSC2.filtered.profiles.list$pars)
@@ -161,7 +166,8 @@ GDSC2@sensitivity$info[test$noisy,"noisy.curve"] <- TRUE
 saveRDS(GDSC2, file=file.path(filteredDir, "GDSC2.rds"))
 
 
-
+rm(GDSC2)
+gc()
 
 
 ## 
@@ -173,7 +179,7 @@ gCSI <- readRDS(file.path(inputDir, "gCSI2.rds"))
 gCSI.filtered.sens <- standardizeRawDataConcRange(gCSI@sensitivity$info, gCSI@sensitivity$raw)
 
 gCSI.filtered.profiles.list <- PharmacoGx:::.calculateFromRaw(raw.sensitivity=gCSI.filtered.sens$sens.raw,
-																nthread=12, cap=100, family="normal")
+																nthread=12, cap=NA, family="normal")
 
 gCSI.filtered.profiles <- data.frame("aac_recomputed" = gCSI.filtered.profiles.list$AUC, "ic50_recomputed" = gCSI.filtered.profiles.list$IC50)
 gCSI.filtered.profiles.pars <- do.call(rbind,gCSI.filtered.profiles.list$pars)
@@ -200,6 +206,9 @@ gCSI@sensitivity$info[test$noisy,"noisy.curve"] <- TRUE
 saveRDS(gCSI, file=file.path(filteredDir, "gCSI2018.rds"))
 
 
+rm(gCSI)
+gc()
+
 
 
 
@@ -208,7 +217,7 @@ CCLE <- readRDS(file.path(inputDir, "CCLE.rds"))
 CCLE.filtered.sens <- standardizeRawDataConcRange(CCLE@sensitivity$info, CCLE@sensitivity$raw)
 
 CCLE.filtered.profiles.list <- PharmacoGx:::.calculateFromRaw(raw.sensitivity=CCLE.filtered.sens$sens.raw,
-																nthread=12, cap=100, family="normal")
+																nthread=12, cap=NA, family="normal")
 
 CCLE.filtered.profiles <- data.frame("aac_recomputed" = CCLE.filtered.profiles.list$AUC, "ic50_recomputed" = CCLE.filtered.profiles.list$IC50)
 CCLE.filtered.profiles.pars <- do.call(rbind,CCLE.filtered.profiles.list$pars)
@@ -236,6 +245,8 @@ saveRDS(CCLE, file=file.path(filteredDir, "CCLE.rds"))
 
 
 
+rm(CCLE)
+gc()
 
 
 UHNBreast <- readRDS(file.path(inputDir, "UHNBreast.rds"))
@@ -243,7 +254,7 @@ UHNBreast <- readRDS(file.path(inputDir, "UHNBreast.rds"))
 UHNBreast.filtered.sens <- standardizeRawDataConcRange(UHNBreast@sensitivity$info, UHNBreast@sensitivity$raw)
 
 UHNBreast.filtered.profiles.list <- PharmacoGx:::.calculateFromRaw(raw.sensitivity=UHNBreast.filtered.sens$sens.raw,
-																nthread=12, cap=100, family="normal")
+																nthread=12, cap=NA, family="normal")
 
 UHNBreast.filtered.profiles <- data.frame("aac_recomputed" = UHNBreast.filtered.profiles.list$AUC, "ic50_recomputed" = UHNBreast.filtered.profiles.list$IC50)
 UHNBreast.filtered.profiles.pars <- do.call(rbind,UHNBreast.filtered.profiles.list$pars)
@@ -272,13 +283,17 @@ saveRDS(UHNBreast, file=file.path(filteredDir, "UHNBreast.rds"))
 
 
 
+rm(UHNBreast)
+gc()
+
+
 
 PRISM <- readRDS(file.path(inputDir, "PRISM.rds"))
 
 PRISM.filtered.sens <- standardizeRawDataConcRange(PRISM@sensitivity$info, PRISM@sensitivity$raw)
 
 PRISM.filtered.profiles.list <- PharmacoGx:::.calculateFromRaw(raw.sensitivity=PRISM.filtered.sens$sens.raw,
-																nthread=12, cap=100, family="normal")
+																nthread=12, cap=NA, family="normal")
 
 PRISM.filtered.profiles <- data.frame("aac_recomputed" = PRISM.filtered.profiles.list$AUC, "ic50_recomputed" = PRISM.filtered.profiles.list$IC50)
 PRISM.filtered.profiles.pars <- do.call(rbind,PRISM.filtered.profiles.list$pars)
@@ -303,6 +318,14 @@ PRISM@sensitivity$info[test$noisy,"noisy.curve"] <- TRUE
 
 
 saveRDS(PRISM, file=file.path(filteredDir, "PRISM.rds"))
+
+
+
+
+rm(PRISM)
+gc()
+
+
 
 
 
