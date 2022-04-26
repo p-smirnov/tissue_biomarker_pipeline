@@ -203,7 +203,7 @@ checkpoint outputJuliaData:
 
 
         MKL_NUM_THREADS=1 MKL_DOMAIN_NUM_THREADS=1 OMP_NUM_THREADS=1 PROJECT={project_dir} DATA={data_dir} \
-        Rscript {code_dir}/prepareBootDataForJuliaBatch.R  {params.indir} {params.outdir} {wildcards.Gene:q} {wildcards.Drug:q} {wildcards.Tissue:q}
+        Rscript {code_dir}/prepareBootDataForJuliaBatch.R  {params.indir} {params.outdir} 
         """
 
 
