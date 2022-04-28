@@ -10,7 +10,7 @@ home <- Sys.getenv("HOME")
 project <- Sys.getenv("PROJECT")
 
 
-badchars <- "[ ]|[/]|[:]|[-]"
+badchars <- "[,]|[;]|[:]|[-]|[+]|[*]|[%]|[$]|[#]|[{]|[}]|[[]|[]]|[|]|[\\^]|[/]|[\\]|[ ]|[(]|[)]"
 
 make.names.2 <- function(x) return(gsub(pat=badchars, rep=".", x))
 

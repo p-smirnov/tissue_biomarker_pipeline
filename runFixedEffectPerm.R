@@ -82,7 +82,7 @@ dyn.load(file.path(codeDir,"metaPermC.so"))
 dyn.load(file.path(codeDir,"metaPermCTissue.so"))
 
 
-badchars <- "[ ]|[/]|[:]|[-]"
+badchars <- "[,]|[;]|[:]|[-]|[+]|[*]|[%]|[$]|[#]|[{]|[}]|[[]|[]]|[|]|[\\^]|[/]|[\\]|[ ]|[(]|[)]"
 
 make.names.2 <- function(x) return(gsub(pat=badchars, rep=".", x))
 
