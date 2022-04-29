@@ -155,9 +155,10 @@ def outputFromHetTest(wildcards):
 rule hetTest:
     input: pset_list, toRunFile=masterToRunFile, metaToRun=rules.getSigGenes.output
     output: "{output_dir}/{Drug}_{Tissue}_{Gene}_hetPerm_10000_out.rds"
-    threads: 1
+    # threads: 1
     params:
-        R=10000
+        R=10000,
+        runtime="6:00:00"
     shell:
         """
         #! /bin/bash
