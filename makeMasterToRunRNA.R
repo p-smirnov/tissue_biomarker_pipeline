@@ -78,9 +78,8 @@ sens.num.dt <- sens.num.dt[Drug %in% drugs_in_3]
 sens.num.dt <- sens.num.dt[!is.na(value)]
 
 ## Here we filtered to cell lines in tissues that are in 3+ datasets, and drugs tested on these cell. 
-## We drop the value column, and keep only the cells-drug combinations that occur at least 3 times
+## We keep only the cells-drug combinations that occur at least 3 times
 
-sens.num.dt[,value := NULL]
 
 sens.num.dt.filt <- sens.num.dt
 ## TODO:: This is wrong, I don't actually want the cellid to be in more than three datasets, just more than 20 cells in at least 3 datasets
@@ -96,8 +95,21 @@ colnames(tissueCell.dt) <- c("cellid", "tissueid")
 
 sens.num.dt.filt <- merge(sens.num.dt.filt, tissueCell.dt, by="cellid")
 
+## First, we filter to at least 20 cell lines in the tissue
 sens.num.dt.filt <- merge(sens.num.dt.filt[,.N,.(tissueid, Drug, PSet)][N>=20], sens.num.dt.filt, by=c("tissueid", "Drug", "PSet"))
 sens.num.dt.filt[,N:=NULL]
+
+## now, we filter to at least 4 of cell lines with > 5% response in the tissue. 10% would be what DSS uses,
+## but we are being a bit lenient here, since its very unlikely that artefacts from a single dataset 
+## would survive meta-analysis
+sens.num.dt.filt <- merge(sens.num.dt.filt[,sum(value>5),.(tissueid, Drug, PSet)][V1>=4], sens.num.dt.filt, by=c("tissueid", "Drug", "PSet"))
+sens.num.dt.filt[,V1:=NULL]
+
+# Finally, we can drop the value column. 
+sens.num.dt.filt[,value := NULL]
+
+
+
 ## Lets extract the gene expresssion values now.
 pset.list.genexp <- lapply(pset.list, function(pset) summarizeMolecularProfiles(pset, mDataNames(pset)))
 
@@ -109,9 +121,21 @@ pset.list.genexp <- lapply(pset.list.genexp, function(SE) {
 names(pset.list.genexp) <- names(pset.list)
 
 
+## We filter right away to protein coding genes here. 
+
+pset.list.genexp.m <- lapply(names(pset.list.genexp), function(x) {
 
 
-pset.list.genexp.m <- lapply(names(pset.list.genexp), function(x) return(cbind("PSet" = x,reshape2::melt(as.is =TRUE, SummarizedExperiment::assay(pset.list.genexp[[x]])))))
+	## microarray and rnaseq annotations have different column names
+	gene_type_col <- ifelse("GeneBioType" %in% colnames(rowData(pset.list.genexp[[x]])), "GeneBioType", "gene_type") 
+	## limiting feature space for power
+	ft <- rownames(rowData(pset.list.genexp[[x]]))[rowData(pset.list.genexp[[x]])[[gene_type_col]] %in% "protein_coding"]
+
+
+	return(cbind("PSet" = x,reshape2::melt(as.is =TRUE, SummarizedExperiment::assay(pset.list.genexp[[x]])[ft,])))}
+)
+
+
 pset.genexp.dt <- rbindlist(pset.list.genexp.m)
 
 
@@ -175,7 +199,7 @@ for(drug in names(sens.num.dt.filt.split)){
 
 
 
-	sens.num.dt.filt.split[[drug]]
+	# sens.num.dt.filt.split[[drug]]
 
 	# pset.genexp.dt.split.psets <- split(pset.genexp.dt.split[[tissue]], by="PSet")
 	# sens.num.dt.filt.split.psets <- split(sens.num.dt.filt.split[[tissue]], by="PSet")

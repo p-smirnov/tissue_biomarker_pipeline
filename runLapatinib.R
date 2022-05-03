@@ -112,7 +112,7 @@ mData <- mDataNames(pset)
 ## microarray and rnaseq annotations have different column names
 gene_type_col <- ifelse("GeneBioType" %in% colnames(featureInfo(pset, mData)), "GeneBioType", "gene_type") 
 ## limiting feature space for power
-ft <- rownames(featureInfo(pset, mData))[featureInfo(pset, mData)[[gene_type_col]] == "protein_coding"]
+ft <- rownames(featureInfo(pset, mData))[featureInfo(pset, mData)[[gene_type_col]] %in% "protein_coding"]
 
 
 
