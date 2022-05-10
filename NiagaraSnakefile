@@ -9,7 +9,6 @@ print(os.getcwd())
 
 masterToRunFile = config["master_table"]
 
-localrules: evaluteHeterogeneity
 
 def cUFL(fn):
     fn = [x.replace(' ', '.') for x in fn]
@@ -119,7 +118,7 @@ checkpoint getSigGenes:
         """
 
 rule runFirstStage:
-    input: pset_list, toRunFile=masterToRunFile
+    input: pset_list, toRunFile=ancient(masterToRunFile)
     params:
         runtime="24:00:00", 
         # pset=lambda wildcards: fst.loc()[wildcards.id][3],
@@ -153,7 +152,7 @@ def outputFromHetTest(wildcards):
 
 
 rule hetTest:
-    input: pset_list, toRunFile=masterToRunFile, metaToRun=rules.getSigGenes.output
+    input: pset_list, toRunFile=ancient(masterToRunFile), metaToRun=rules.getSigGenes.output
     output: "{output_dir}/{Drug}_{Tissue}_{Gene}_hetPerm_10000_out.rds"
     # threads: 1
     params:

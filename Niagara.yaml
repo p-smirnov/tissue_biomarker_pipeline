@@ -1,4 +1,4 @@
-master_table: "/scratch/b/bhaibeka/psmirnov/Tissue_Biomarker/rna/runlist_files/geneExpressionMasterToRunListPriority.txt"
+master_table: "/scratch/b/bhaibeka/psmirnov/Tissue_Biomarker/rna/runlist_files/geneExpressionMasterToRunList.txt"
 scratch_dir: "/scratch/b/bhaibeka/psmirnov"
 project_dir: "/scratch/b/bhaibeka/psmirnov/Tissue_Biomarker"
 data_dir: "/home/b/bhaibeka/psmirnov/Data/TBPInputs"
