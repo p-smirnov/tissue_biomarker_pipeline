@@ -251,7 +251,7 @@ rule evaluateJuliaRes:
 
 def requiredResJulia(wildcards):
     with checkpoints.evaluteHeterogeneity.get(**wildcards).output[0].open() as f:
-        # test = checkpoints.outputJuliaData.get(**wildcards).output[0]
+        test = checkpoints.outputJuliaData.get(**wildcards).output[0]
         # print(test)
         hetRes = pd.read_csv(f)
         hetRes = hetRes.loc()[hetRes["hetTestRes"]==1]
@@ -261,7 +261,7 @@ def requiredResJulia(wildcards):
 
 def requiredResFixedEffects(wildcards):
     with checkpoints.evaluteHeterogeneity.get(**wildcards).output[0].open() as f:
-        # test = checkpoints.outputJuliaData.get(**wildcards).output[0]
+        test = checkpoints.outputJuliaData.get(**wildcards).output[0]
         # print(test)
         hetRes = pd.read_csv(f)
         hetRes = hetRes.loc()[hetRes["hetTestRes"]==0]
