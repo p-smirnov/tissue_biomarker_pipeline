@@ -85,8 +85,6 @@ print(signature_dir)
 
 localrules: getFirstStageToRun
 
-rule all:
-        input: requiredResAll
 
 def getFirstStageOutput(wildcards):
     with checkpoints.getFirstStageToRun.get(**wildcards).output[0].open() as f:
@@ -302,5 +300,6 @@ def requiredResAll(wildcards):
     return requiredResJulia(wildcards) + requiredResFixedEffects(wildcards)
 
 
-
+rule all:
+        input: requiredResAll
         
