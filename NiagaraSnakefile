@@ -73,8 +73,8 @@ checkpoint getFirstStageToRun:
     output: masterToRunFile + "2" 
     params:
         runtime="1:00:00"
-    resources:
-        time="1:00:00"
+    # resources:
+    #     time="1:00:00"
     shell:
         """
         #! /bin/bash
@@ -105,8 +105,8 @@ checkpoint getSigGenes:
     output: runlist_dir + "/toRunMetaByGene.txt"
     params:
         runtime="24:00:00"
-    resources: 
-        time="24:00:00"
+    # resources: 
+    #     time="24:00:00"
     shell:
         """
         #! /bin/bash
@@ -126,8 +126,8 @@ rule runFirstStage:
         # tissue=lambda wildcards: fst.loc()[wildcards.id][1],
         max_number_of_perms=config["max_first_stage_perm"]
     threads: 40
-    resources:
-        time="24:00:00"
+    # resources:
+    #     time="24:00:00"
     output: signature_dir + "/signature_{PSet}_{Drug}_{Tissue}.rds"
     shell:
         """
@@ -274,15 +274,15 @@ rule runFixedEffectTest:
     input: runlist_dir + "/metaHetTestRes.txt", runlist_dir + "/toRunMetaByGene.txt", pset_list
     output: [perm_out_sig + "/permSig_{Gene}_{Drug}_{Tissue}_out.rds", perm_out_dir + "/metaPermRes_{Gene}_{Drug}_{Tissue}_perm.RDS"]
     threads: 1
-    params: #TODO fix me
+    params: 
         runtime="1:00:00",
         partition="all",
         rundir=runlist_dir,
         fixedeffthread=1,
         alpha=0.05
-    resources:
-        time="0:30:00", 
-        mem_mb=7500
+    # resources:
+    #     time="0:30:00", 
+    #     mem_mb=7500
     shell:
         """
         #! /bin/bash
