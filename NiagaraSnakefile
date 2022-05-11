@@ -219,7 +219,7 @@ rule runJuliaH4H:
         """
         #! /bin/bash
         set +u;
-        module load NiaEnv/2019b julia/1.5.3
+        module load julia/1.7.2
         SCRATCH={scratch_dir} 
         mkdir -p $containername/{boot_out_sig}
 
