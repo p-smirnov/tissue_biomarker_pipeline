@@ -45,8 +45,9 @@ mySigDir <- file.path(project, paste0("pearson_",method,"_res"))
 myOutDir <- file.path(project, paste0("hetTest"))
 runlistDir <- file.path(project, paste0("runlist_files"))
 
-
-
+print(drug)
+print(tissue)
+print(gene)
 
 containername <- Sys.getenv("containername", unset=NA_character_)
 
