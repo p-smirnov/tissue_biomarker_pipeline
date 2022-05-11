@@ -175,7 +175,8 @@ checkpoint evaluteHeterogeneity:
     output: runlist_dir + "/metaHetTestRes.txt"
     params:
         outdir = runlist_dir, 
-        indir = runlist_dir
+        indir = runlist_dir,
+        runtime="3:00:00"
     shell:
         """
         #! /bin/bash
@@ -211,7 +212,7 @@ rule runJuliaH4H:
     input: julia_data_dir + "/modelData_{Gene}_{Drug}_{Tissue}.csv"
     output: "{output_dir}/metaBootRes_{Gene}_{Drug}_{Tissue}_out.txt"
     params:
-        runtime="6:00:00",
+        runtime="24:00:00",
         partition="all",
         R=10000, 
     threads: 40,
@@ -232,7 +233,7 @@ rule evaluateJuliaRes:
     input: bootres=julia_out_dir + "/metaBootRes_{Gene}_{Drug}_{Tissue}_out.txt", bootdata=julia_data_dir + "/modelData_{Gene}_{Drug}_{Tissue}.csv"
     output: "{output_dir}/bootSig_{Gene}_{Drug}_{Tissue}_out.rds"
     params: # todo fix these
-        runtime="24:00:00",
+        runtime="1:00:00",
         partition="all",
         R=10000,
         juliaDataDir=julia_data_dir
