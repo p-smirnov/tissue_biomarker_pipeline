@@ -274,7 +274,7 @@ rule runFixedEffectTest:
     output: [perm_out_sig + "/permSig_{Gene}_{Drug}_{Tissue}_out.rds", perm_out_dir + "/metaPermRes_{Gene}_{Drug}_{Tissue}_perm.RDS"]
     threads: 1
     params: #TODO fix me
-        runtime="0:30:00",
+        runtime="1:00:00",
         partition="all",
         rundir=runlist_dir,
         fixedeffthread=1,
