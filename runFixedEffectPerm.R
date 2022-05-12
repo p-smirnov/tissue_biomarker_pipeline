@@ -76,9 +76,6 @@ if(!is.na(containername)){
 
 
 
-
-
-
 codeDir <- args[7]
 dyn.load(file.path(codeDir,"metaPermC.so"))
 dyn.load(file.path(codeDir,"metaPermCTissue.so"))
@@ -158,7 +155,7 @@ if(as.logical(snakemake)){
 }
 
 
-toRunThis <- toRunExtended[toRunExtended[,3] == drug & toRunExtended[,2] == tissue & toRunExtended[,1] == gene, ]
+toRunThis <- toRunExtended[toRunExtended[[3]] == drug & toRunExtended[[2]] == tissue & toRunExtended[[1]] == gene]
 # drug <- unique(toRunThis[,3])
 # tissue <- unique(toRunThis[,2])
 # gene <- unique(toRunThis[,1])
