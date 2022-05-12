@@ -61,10 +61,8 @@ myPvalDir <- file.path(project, paste0(method, "_meta_perm_sig"))
 runDir <- args[6]
 
 containername <- Sys.getenv("containername", unset=NA_character_)
-snakemake <- Sys.getenv("SNAKEMAKE", unset=0)
+snakemake <- as.numeric(Sys.getenv("SNAKEMAKE", unset=0))
 
-print("Printing snakemake value:")
-print(snakemake)
 
 if(!is.na(containername)){
     myDataDir <- file.path(containername, myDataDir)

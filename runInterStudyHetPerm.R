@@ -50,7 +50,7 @@ print(tissue)
 print(gene)
 
 containername <- Sys.getenv("containername", unset=NA_character_)
-snakemake <- Sys.getenv("SNAKEMAKE", unset=0)
+snakemake <- as.numeric(Sys.getenv("SNAKEMAKE", unset=0))
 
 
 if(!is.na(containername)){
