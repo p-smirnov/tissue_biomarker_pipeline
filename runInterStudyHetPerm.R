@@ -50,6 +50,8 @@ print(tissue)
 print(gene)
 
 containername <- Sys.getenv("containername", unset=NA_character_)
+snakemake <- Sys.getenv("SNAKEMAKE", unset=0)
+
 
 if(!is.na(containername)){
 	myOutDir <- file.path(containername, myOutDir)
@@ -112,9 +114,12 @@ toRunExtended <- data.frame(fread(file.path(runlistDir,"toRunMetaByGene.txt"), h
 
 # need to do this "trick" because names are made path safe, and arguments are derived from paths for snakemake's sake 
 
-# drug <- unique(toRunExtended[,3])[make.names.2(unique(toRunExtended[,3])) == drug]
-# tissue <- unique(toRunExtended[,2])[make.names.2(unique(toRunExtended[,2])) == tissue]
-# gene <- unique(toRunExtended[,1])[make.names.2(unique(toRunExtended[,1])) == gene]
+if(snakemake){
+  drug <- unique(toRunExtended[,3])[make.names.2(unique(toRunExtended[,3])) == drug]
+  tissue <- unique(toRunExtended[,2])[make.names.2(unique(toRunExtended[,2])) == tissue]
+  gene <- unique(toRunExtended[,1])[make.names.2(unique(toRunExtended[,1])) == gene]
+}
+
 
 
 toRunThis <- toRunExtended[toRunExtended[,3] == drug & toRunExtended[,2] == tissue & toRunExtended[,1] == gene, ]
