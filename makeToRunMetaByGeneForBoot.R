@@ -44,6 +44,10 @@ toRunHet[,hetFilePath := file.path(hetTestDir,
 
 toRunHet[,hetTestExists := file.exists(hetFilePath)]
 
+toRunMetaMissing <- toRunHet[!(hetTestExists)]
+
+fwrite(toRunMetaMissing, file=file.path(outDir, "metaHetTestMissing.txt"))
+
 toRunMetaFinal <- toRunHet#[(hetTestExists)] #should exist for each gene!
 
 
