@@ -153,7 +153,7 @@ total_gene_list <- toRunExtended[,unique(Gene)]
 
 
 # need to do this "trick" because names are made path safe, and arguments are derived from paths for snakemake's sake 
-if(snakemake){
+if(as.logical(snakemake)){
 	drug <- unique(toRunExtended[,3])[make.names.2(unique(toRunExtended[,3])) == drug]
   tissue <- unique(toRunExtended[,2])[make.names.2(unique(toRunExtended[,2])) == tissue]
   gene <- unique(toRunExtended[,1])[make.names.2(unique(toRunExtended[,1])) == gene]
