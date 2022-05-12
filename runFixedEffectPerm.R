@@ -159,7 +159,7 @@ toRunThis <- toRunExtended[toRunExtended[[3]] == drug & toRunExtended[[2]] == ti
 # drug <- unique(toRunThis[,3])
 # tissue <- unique(toRunThis[,2])
 # gene <- unique(toRunThis[,1])
-pSets <- toRunThis[,4]
+pSets <- toRunThis[[4]]
 
 
 
