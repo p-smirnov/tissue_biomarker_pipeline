@@ -43,7 +43,9 @@ myDataDir <- dataDir
 myOutDir <- args[[2]]
 inDir <- args[[1]]
 
+badchars <- "[,]|[;]|[:]|[-]|[+]|[*]|[%]|[$]|[#]|[{]|[}]|[[]|[]]|[|]|[\\^]|[/]|[\\]|[ ]|[(]|[)]"
 
+make.names.2 <- function(x) return(gsub(pat=badchars, rep=".", x))
 
 
 containername <- Sys.getenv("containername", unset=NA_character_)
@@ -266,7 +268,7 @@ for(i in seq_len(nrow(toRunByGene))){
     model.data$R <- R
 
 
-    write.csv(model.data, file=file.path(myOutDir,  make.names(paste0("modelData_", gene, "_", drug, "_", tissue, ".csv"))))
+    write.csv(model.data, file=file.path(myOutDir,  make.names.2(paste0("modelData_", gene, "_", drug, "_", tissue, ".csv"))))
     if(!i%%100) print(i)
 }
 

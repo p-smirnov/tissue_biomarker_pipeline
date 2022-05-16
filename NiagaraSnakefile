@@ -243,6 +243,7 @@ rule evaluateJuliaRes:
         set +u;
         module load CCEnv  nixpkgs/16.09 gcc/8.3.0 r/4.0.0
         SCRATCH={scratch_dir} 
+        mkdir -p $containername/{boot_out_sig}
 
 
         PROJECT={project_dir} DATA={data_dir} \
