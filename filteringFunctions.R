@@ -1,4 +1,7 @@
-
+## This function makes sure that AACs are recalculated over a common concentration range across cell lines, thereby making them more comparable.
+## It does this by trying to maximize the number of measured points remaining, removing points that fall outside the chosen concentration 
+## range if measurements for a curve exist past that range, and removing full curves if the whole range was not measured.
+## In practice, I find it has been removing about 5% of the data, but that is of course dependent of the dataset. 
 standardizeRawDataConcRange <- function(sens.info, sens.raw){
   unq.drugs <- unique(sens.info$drugid)
   
@@ -22,19 +25,19 @@ standardizeRawDataConcRange <- function(sens.info, sens.raw){
     sq <- seq(indicies[1], indicies[length(indicies)]-1)
     all(lr.tbl[["l"]][sq+1] <= lr.tbl[["r"]][sq])
   }
-  per.drug.range.indicies <- sapply(conc.ranges.disj[,.N,drugid][,N], returnConsInts)
+  per.drug.range.indicies <- sapply(conc.ranges.disj[,.N,drugid][, N], returnConsInts)
   
-  names(per.drug.range.indicies) <- conc.ranges.disj[,unique(drugid)] ## checked this: conc.ranges.disj[,.N,drugid][,drugid] == conc.ranges.disj[,unique(drugid)]
+  names(per.drug.range.indicies) <- conc.ranges.disj[, unique(drugid)] ## checked this: conc.ranges.disj[,.N,drugid][,drugid] == conc.ranges.disj[,unique(drugid)]
   
   
   # Check if there are any holes in the chosen range combination
-  per.drug.range.indicies <- sapply(names(per.drug.range.indicies), function(drug){
+  per.drug.range.indicies <- sapply(names(per.drug.range.indicies), function(drug) {
     
     lr.tbl <- conc.ranges.disj[drugid == drug]
     per.drug.range.indicies[[drug]][sapply(per.drug.range.indicies[[drug]], rangeNoHoles, lr.tbl = lr.tbl)]
     
   })
-  per.drug.range.indicies.2 <- sapply(names(per.drug.range.indicies), function(drug){
+  per.drug.range.indicies.2 <- sapply(names(per.drug.range.indicies), function(drug) {
     
     lr.tbl <- conc.ranges.disj[drugid == drug]
     res <- t(sapply(per.drug.range.indicies[[drug]], function(x) return(c(lr.tbl[x[1],l], lr.tbl[x[length(x)],r]))))
@@ -49,7 +52,7 @@ standardizeRawDataConcRange <- function(sens.info, sens.raw){
   conc.m <- na.omit(conc.m)
   setkey(conc.m, drugid, Var1, value)
   setkey(conc.ranges, drugid, l, r)
-  # tic()
+
   ## NOTE:: Data.table used for maximum speed. Probably possible to do this more intelligently by 
   ## NOTE:: being aware of which conditions overlap, but its fast enough right now as it is.
   chosen.drug.ranges <- lapply(unq.drugs, function(drug){
@@ -60,7 +63,7 @@ standardizeRawDataConcRange <- function(sens.info, sens.raw){
     max.ranges <- per.drug.range.indicies.dt[drugid==drug][which(num.points.in.range==max(num.points.in.range))]
     max.ranges[which.max(log10(r) - log10(l)), ]
   })
-  # toc()
+
   names(chosen.drug.ranges) <- sapply(chosen.drug.ranges, `[[`, "drugid")
   removed.experiments <- unlist(lapply(unq.drugs, function(drug){
     rng <- unlist(chosen.drug.ranges[[drug]][,.(l,r)])
@@ -90,7 +93,7 @@ standardizeRawDataConcRange <- function(sens.info, sens.raw){
 }
 
 
-#filter noisy curves from PSet (modified function to take into account standardized conc range)
+#filter noisy curves from PSet (modified from PharmacoGx, to take into account standardized conc range)
 filterNoisyCurves2 <- function(pSet, epsilon=25 , positive.cutoff.percent=.80, mean.viablity=200, nthread=1) {
   acceptable <- mclapply(rownames(sensitivityInfo(pSet)), function(xp) {
     #for(xp in rownames(sensitivityInfo(pSet))){

@@ -67,6 +67,8 @@ perm_out_sig = project_dir + "/perm_meta_perm_sig"
 pset_list = ['Data/TBPInputs/cnv/CCLE.CTRPv2.rds', 'Data/TBPInputs/cnv/gCSI.rds', 'Data/TBPInputs/cnv/GDSC2.rds']
 print(pset_list)
 
+
+## This step is sometimes necessary to trigger the download from the cloud, if you don't have a local copy of the masterToRunFile. 
 checkpoint getFirstStageToRun:
     input: masterToRunFile
     output: masterToRunFile + "2"
@@ -133,7 +135,7 @@ rule runFirstStage:
         SCRATCH={scratch_dir} 
 
         MKL_NUM_THREADS=1 MKL_DOMAIN_NUM_THREADS=1 OMP_NUM_THREADS=1 CODE={code_dir}\
-         PROJECT={project_dir} DATA={data_dir} Rscript {code_dir}/runLapatinib.R {wildcards.PSet} "{wildcards.Drug}" '{wildcards.Tissue}' {threads} {input.toRunFile} {params.max_number_of_perms} 
+         PROJECT={project_dir} DATA={data_dir} Rscript {code_dir}/runDatasetSpecificPermutations.R {wildcards.PSet} "{wildcards.Drug}" '{wildcards.Tissue}' {threads} {input.toRunFile} {params.max_number_of_perms} 
         """
 
 def outputFromHetTest(wildcards):
