@@ -26,7 +26,7 @@ tissue <- args[2]
 
 gene <- args[3]
 
-badchars <- "[ ]|[/]|[:]|[-]"
+badchars <- "[,]|[;]|[:]|[-]|[+]|[*]|[%]|[$]|[#]|[{]|[}]|[[]|[]]|[|]|[\\^]|[/]|[\\]|[ ]|[(]|[)]"
 
 make.names.2 <- function(x) return(gsub(pat=badchars, rep=".", x))
 
@@ -45,10 +45,13 @@ mySigDir <- file.path(project, paste0("pearson_",method,"_res"))
 myOutDir <- file.path(project, paste0("hetTest"))
 runlistDir <- file.path(project, paste0("runlist_files"))
 
-
-
+print(drug)
+print(tissue)
+print(gene)
 
 containername <- Sys.getenv("containername", unset=NA_character_)
+snakemake <- as.numeric(Sys.getenv("SNAKEMAKE", unset=0))
+
 
 if(!is.na(containername)){
 	myOutDir <- file.path(containername, myOutDir)
@@ -69,7 +72,9 @@ loadPSet <- function(psetName, tissue){
 		   		pset <- readRDS(file.path(myDataDir,"CCLE.rds"))
 		   	}, CCLE.CTRPv2 = {
 		   		pset <- readRDS(file.path(myDataDir,"CCLE.CTRPv2.rds"))
-		   	}, GDSC_v1 = {
+		   	}, CCLE.PRISM = {
+	   			pset <- readRDS(file.path(myDataDir,"CCLE.PRISM.rds"))
+	   		}, GDSC_v1 = {
 		   		pset <- readRDS(file.path(myDataDir,"GDSC1.rds"))
 		   	}, GDSC_v2 = {
 		   		pset <- readRDS(file.path(myDataDir,"GDSC2.rds"))
@@ -108,10 +113,19 @@ loadPSet <- function(psetName, tissue){
 toRunExtended <- data.frame(fread(file.path(runlistDir,"toRunMetaByGene.txt"), header=FALSE))
 
 # need to do this "trick" because names are made path safe, and arguments are derived from paths for snakemake's sake 
-toRunThis <- toRunExtended[make.names.2(toRunExtended[,3]) == drug & make.names.2(toRunExtended[,2]) == tissue & make.names.2(toRunExtended[,1]) == gene, ]
-drug <- unique(toRunThis[,3])
-tissue <- unique(toRunThis[,2])
-gene <- unique(toRunThis[,1])
+
+if(snakemake){
+  drug <- unique(toRunExtended[,3])[make.names.2(unique(toRunExtended[,3])) == drug]
+  tissue <- unique(toRunExtended[,2])[make.names.2(unique(toRunExtended[,2])) == tissue]
+  gene <- unique(toRunExtended[,1])[make.names.2(unique(toRunExtended[,1])) == gene]
+}
+
+
+
+toRunThis <- toRunExtended[toRunExtended[,3] == drug & toRunExtended[,2] == tissue & toRunExtended[,1] == gene, ]
+# drug <- unique(toRunThis[,3])
+# tissue <- unique(toRunThis[,2])
+# gene <- unique(toRunThis[,1])
 pSets <- toRunThis[,4]
 
 

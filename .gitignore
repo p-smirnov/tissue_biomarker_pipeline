@@ -4,3 +4,4 @@ petrs-biomarker-pipeline
 Data
 .snakemake
 *.txt
+slurm

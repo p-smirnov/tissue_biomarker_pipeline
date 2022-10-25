@@ -10,7 +10,7 @@ home <- Sys.getenv("HOME")
 project <- Sys.getenv("PROJECT")
 
 
-badchars <- "[ ]|[/]|[:]|[-]"
+badchars <- "[,]|[;]|[:]|[-]|[+]|[*]|[%]|[$]|[#]|[{]|[}]|[[]|[]]|[|]|[\\^]|[/]|[\\]|[ ]|[(]|[)]"
 
 make.names.2 <- function(x) return(gsub(pat=badchars, rep=".", x))
 
@@ -43,6 +43,10 @@ toRunHet[,hetFilePath := file.path(hetTestDir,
 		make.names.2(paste0(Drug, "_", Tissue, "_", Gene, "_hetPerm_10000_out.rds")))]
 
 toRunHet[,hetTestExists := file.exists(hetFilePath)]
+
+toRunMetaMissing <- toRunHet[!(hetTestExists)]
+
+fwrite(toRunMetaMissing, file=file.path(outDir, "metaHetTestMissing.txt"))
 
 toRunMetaFinal <- toRunHet#[(hetTestExists)] #should exist for each gene!
 

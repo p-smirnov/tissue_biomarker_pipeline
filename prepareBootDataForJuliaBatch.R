@@ -43,7 +43,9 @@ myDataDir <- dataDir
 myOutDir <- args[[2]]
 inDir <- args[[1]]
 
+badchars <- "[,]|[;]|[:]|[-]|[+]|[*]|[%]|[$]|[#]|[{]|[}]|[[]|[]]|[|]|[\\^]|[/]|[\\]|[ ]|[(]|[)]"
 
+make.names.2 <- function(x) return(gsub(pat=badchars, rep=".", x))
 
 
 containername <- Sys.getenv("containername", unset=NA_character_)
@@ -67,6 +69,8 @@ loadPSet <- function(psetName, tissue){
                 pset <- readRDS(file.path(myDataDir,"CCLE.rds"))
            }, CCLE.CTRPv2 = {
                 pset <- readRDS(file.path(myDataDir,"CCLE.CTRPv2.rds"))
+           }, CCLE.PRISM = {
+                pset <- readRDS(file.path(myDataDir,"CCLE.PRISM.rds"))
            }, GDSC_v1 = {
                 pset <- readRDS(file.path(myDataDir,"GDSC1.rds"))
            }, GDSC_v2 = {
@@ -264,7 +268,7 @@ for(i in seq_len(nrow(toRunByGene))){
     model.data$R <- R
 
 
-    write.csv(model.data, file=file.path(myOutDir,  make.names(paste0("modelData_", gene, "_", drug, "_", tissue, ".csv"))))
+    write.csv(model.data, file=file.path(myOutDir,  make.names.2(paste0("modelData_", gene, "_", drug, "_", tissue, ".csv"))))
     if(!i%%100) print(i)
 }
 

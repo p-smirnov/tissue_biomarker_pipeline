@@ -58,7 +58,7 @@ if(!is.na(containername)){
 
 
 
-badchars <- "[ ]|[/]|[:]|[-]"
+badchars <- "[,]|[;]|[:]|[-]|[+]|[*]|[%]|[$]|[#]|[{]|[}]|[[]|[]]|[|]|[\\^]|[/]|[\\]|[ ]|[(]|[)]"
 
 make.names.2 <- function(x) return(gsub(pat=badchars, rep=".", x))
 
@@ -86,6 +86,8 @@ switch(psetName,
 	   		pset <- readRDS(file.path(myDataDir,"CCLE.rds"))
 	   }, CCLE.CTRPv2 = {
 	   		pset <- readRDS(file.path(myDataDir,"CCLE.CTRPv2.rds"))
+	   }, CCLE.PRISM = {
+	   		pset <- readRDS(file.path(myDataDir,"CCLE.PRISM.rds"))
 	   }, GDSC_v1 = {
 	   		pset <- readRDS(file.path(myDataDir,"GDSC1.rds"))
 	   }, GDSC_v2 = {
@@ -110,7 +112,7 @@ mData <- mDataNames(pset)
 ## microarray and rnaseq annotations have different column names
 gene_type_col <- ifelse("GeneBioType" %in% colnames(featureInfo(pset, mData)), "GeneBioType", "gene_type") 
 ## limiting feature space for power
-ft <- rownames(featureInfo(pset, mData))[featureInfo(pset, mData)[[gene_type_col]] == "protein_coding"]
+ft <- rownames(featureInfo(pset, mData))[featureInfo(pset, mData)[[gene_type_col]] %in% "protein_coding"]
 
 
 

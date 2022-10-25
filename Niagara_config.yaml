@@ -1,0 +1,6 @@
+__default__ :
+    ntasks    : "1"
+    cpus-per-task : "{threads}"
+    nodes     : "1"
+    output    : "/scratch/b/bhaibeka/psmirnov/logs/{rule}/{rule}.{wildcards}.out"
+    error     : "/scratch/b/bhaibeka/psmirnov/logs/{rule}/{rule}.{wildcards}.err"

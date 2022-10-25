@@ -118,7 +118,7 @@ modelData2 = standardizeByDataset(modelData);
 m0 = fit(LinearMixedModel, @formula(y ~ (x + 0| dataset) + x + 0), modelData2);
 t0 = coef(m0)[1];
 
-# badchars = r"[,]|[;]|[:]|[-]|[+]|[*]|[%]|[$]|[#]|[{]|[}]|[[]|[]]|[|]|[\^]|[/]|[\\]|[ ]"
+# badchars = r"[,]|[;]|[:]|[-]|[+]|[*]|[%]|[$]|[#]|[{]|[}]|[[]|[]]|[|]|[\^]|[/]|[\\]|[ ]|[(]|[)]"
 
 # tissueClean = replace(tissue, badchars => s".")
 
