@@ -6,7 +6,7 @@ library(PharmacoGx)
 
 home <- Sys.getenv("HOME")
 scratch <- Sys.getenv("SCRATCH")
-project <- file.path(scratch, "Tissue_Biomaker", "rna")
+project <- file.path(scratch, "Tissue_Biomarker", "rna")
 
 
 myDataDir <- file.path(home, "Data", "TBPInputs", "rna")
