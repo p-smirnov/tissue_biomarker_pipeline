@@ -49,7 +49,6 @@ project <- Sys.getenv("PROJECT")
 myPvalDir <- file.path(project, paste0(method, "_meta_boot_sig"))
 
 myInFl <- args[5]
-myDataFl <- args[6]
 
 if(!file.exists(myPvalDir)) dir.create(myPvalDir)
 
@@ -61,7 +60,6 @@ containername <- Sys.getenv("containername", unset=NA_character_)
 if(!is.na(containername)){
     myBootDir <- file.path(containername, myBootDir)
     myPvalDir <- file.path(containername, myPvalDir)
-    # myDataFl <- file.path(containername, myDataFl)
     # myInFl <- file.path(containername, myInFl)
 
 
@@ -69,10 +67,6 @@ if(!is.na(containername)){
 
 
 
-model.data <- fread(myDataFl)
-
-model.data[,R:=NULL]
-model.data[,V1:=NULL]
 
 ### First we handle the CI and p-value computation for the bootstrapped meta-estimate
 
@@ -89,7 +83,7 @@ parseBootResults <- function(unparsed){
       t0 = t0,
       t = t,
       R = R,
-      data = as.data.frame(model.data),
+      data = NA_real_,#as.data.frame(model.data),
       seed = NA_real_,
       sim = "ordinary",
       stype = "i",
