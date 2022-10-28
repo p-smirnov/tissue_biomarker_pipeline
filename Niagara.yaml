@@ -7,7 +7,7 @@ code_dir: "/scratch/b/bhaibeka/psmirnov/tissue_biomarker_pipeline"
 julia_working_dir: "/scratch/b/bhaibeka/psmirnov"
 max_first_stage_perm: "Default"
 pset_list: ['/home/b/bhaibeka/psmirnov/Data/TBPInputs/rna/CCLE.CTRPv2.rds', 
-            '/home/b/bhaibeka/psmirnov/Data/TBPInputs/rna/CCLE.PRISM.rds', 
+            '/home/b/bhaibeka/psmirnov/Data/TBPInputs/rna/CCLE.rds', 
             '/home/b/bhaibeka/psmirnov/Data/TBPInputs/rna/GDSC1.rds',
             '/home/b/bhaibeka/psmirnov/Data/TBPInputs/rna/GDSC2.rds',
             '/home/b/bhaibeka/psmirnov/Data/TBPInputs/rna/gCSI.rds',

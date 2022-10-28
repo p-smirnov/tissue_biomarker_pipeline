@@ -337,15 +337,18 @@ outDirRNA <- "~/Data/TBPInputs/rna/"
 outDirCNV <- "~/Data/TBPInputs/cnv/"
 
 
-CCLE <- readRDS(file.path(filteredDir, "CCLE.rds"))
-CTRPv2 <- readRDS(file.path(filteredDir, "CTRPv2.rds"))
-PRISM <- readRDS(file.path(filteredDir, "PRISM.rds"))
+CCLE <- updateObject(readRDS(file.path(filteredDir, "CCLE.rds")))
+CTRPv2 <- updateObject(readRDS(file.path(filteredDir, "CTRPv2.rds")))
+PRISM <- updateObject(readRDS(file.path(filteredDir, "PRISM.rds")))
 
 
 CCLE.microarray <- CCLE
 CCLE.microarray@molecularProfiles <- CCLE.microarray@molecularProfiles["rna"]
 CCLE.PRISM <- mergePSets(CCLE.microarray, PRISM)
 saveRDS(CCLE.PRISM, file=file.path(outDirRNA, "CCLE.PRISM.rds"))
+
+saveRDS(CCLE.microarray, file = file.path(outDirRNA, "CCLE.rds"))
+
 
 CCLE.rnaseq <- CCLE
 CCLE.rnaseq@molecularProfiles <- CCLE.rnaseq@molecularProfiles["Kallisto_0.46.1.rnaseq"]
@@ -361,7 +364,7 @@ saveRDS(CCLE.CTRPv2, file=file.path(outDirRNA, "CCLE.CTRPv2.rds"))
 
 
 
-GDSC1 <- readRDS(file.path(filteredDir, "GDSC1.rds"))
+GDSC1 <- updateObject(readRDS(file.path(filteredDir, "GDSC1.rds")))
 
 GDSC1@molecularProfiles <- GDSC1@molecularProfiles["rna"]
 
@@ -370,7 +373,7 @@ saveRDS(GDSC1, file=file.path(outDirRNA,"GDSC1.rds"))
 
 
 
-GDSC2 <- readRDS(file.path(filteredDir, "GDSC2.rds"))
+GDSC2 <- updateObject(readRDS(file.path(filteredDir, "GDSC2.rds")))
 GDSC2.rna <- GDSC2
 
 GDSC2.rna@molecularProfiles <- GDSC2.rna@molecularProfiles["rna"]
@@ -384,7 +387,7 @@ saveRDS(GDSC2.rna, file=file.path(outDirRNA,"GDSC2.rds"))
 
 
 
-gCSI <- readRDS(file.path(filteredDir, "gCSI2018.rds"))
+gCSI <- updateObject(readRDS(file.path(filteredDir, "gCSI2018.rds")))
 gCSI.rna <- gCSI
 gCSI.rna@molecularProfiles <- gCSI.rna@molecularProfiles["Kallisto_0.46.1.rnaseq"]
 
@@ -397,7 +400,7 @@ saveRDS(gCSI.rna, file=file.path(outDirRNA,"gCSI.rds"))
 
 
 
-GRAY <- readRDS(file.path(filteredDir, "GRAY2017.rds"))
+GRAY <- updateObject(readRDS(file.path(filteredDir, "GRAY2017.rds")))
 GRAY.rna <- GRAY
 
 GRAY.rna@molecularProfiles <- GRAY.rna@molecularProfiles["Kallisto_0.46.1.rnaseq"]
@@ -405,7 +408,7 @@ GRAY.rna@molecularProfiles <- GRAY.rna@molecularProfiles["Kallisto_0.46.1.rnaseq
 saveRDS(GRAY.rna, file=file.path(outDirRNA,"GRAY.rds"))
 
 
-UHNBreast <- readRDS(file.path(filteredDir, "UHNBreast.rds"))
+UHNBreast <- updateObject(readRDS(file.path(filteredDir, "UHNBreast.rds")))
 UHNBreast.rna <- UHNBreast
 
 UHNBreast.rna@molecularProfiles <- UHNBreast.rna@molecularProfiles["Kallisto_0.46.1.rnaseq"]

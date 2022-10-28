@@ -6,10 +6,12 @@ library(PharmacoGx)
 
 home <- Sys.getenv("HOME")
 scratch <- Sys.getenv("SCRATCH")
+project <- file.path(scratch, "Tissue_Biomaker", "rna")
+
 
 myDataDir <- file.path(home, "Data", "TBPInputs", "rna")
 
-PRISM <- readRDS(file.path(myDataDir,"CCLE.PRISM.rds"))
+CCLE <- readRDS(file.path(myDataDir,"CCLE.rds"))
 CTRPv2 <- readRDS(file.path(myDataDir,"CCLE.CTRPv2.rds"))
 GDSC1 <- readRDS(file.path(myDataDir,"GDSC1.rds"))
 GDSC2 <- readRDS(file.path(myDataDir,"GDSC2.rds"))
@@ -17,7 +19,7 @@ gCSI <- readRDS(file.path(myDataDir,"gCSI.rds"))
 GRAY <- readRDS(file.path(myDataDir,"GRAY.rds"))
 UHNBreast <- readRDS(file.path(myDataDir,"UHNBreast.rds"))
 
-pset.list <- list(PRISM, CTRPv2, GDSC1, GDSC2, GRAY, UHNBreast, gCSI)
+pset.list <- list(CCLE, CTRPv2, GDSC1, GDSC2, GRAY, UHNBreast, gCSI)
 
 names(pset.list) <- sapply(pset.list, name)
 
@@ -32,7 +34,7 @@ colnames(drug.table) <- lapply(pset.list, name)
 myord <- order(rowSums(drug.table), decreasing=TRUE)
 
 drug.table <- drug.table[myord,]
-write.csv(drug.table, file="drugIntersectTable.csv")
+# write.csv(drug.table, file="drugIntersectTable.csv")
 
 all.tissues <- .unionList(lapply(pset.list, function(x) return(cellInfo(x)$tissueid)))
 tissue.table <- sapply(pset.list, function(pset) return(sapply(all.tissues, function(x) sum(x == cellInfo(pset)$tissueid, na.rm=TRUE))))
@@ -45,7 +47,7 @@ tissue.table <- tissue.table >= 20
 
 myord <- order(rowSums(tissue.table), decreasing=TRUE)
 tissue.table <- tissue.table[myord,]
-write.csv(tissue.table, file="tissueIntersectTable.csv")
+# write.csv(tissue.table, file="tissueIntersectTable.csv")
 
 
 library(reshape2)
@@ -246,7 +248,9 @@ all.dt <- rbindlist(all.dt.list)
 all.dt[,N:=NULL]
 all.dt <- all.dt[order(PSet, tissueid, Drug, geneid)]
 
-write.table(all.dt, file.path(scratch, "geneExpressionMasterToRunList.txt"), quote=FALSE, row.names=FALSE, sep=",", col.names=FALSE)
+if(!dir.exists(file.path(project, "runlist_files/"))) dir.create(file.path(project, "runlist_files/"))
+
+write.table(all.dt, file.path(project, "runlist_files/geneExpressionMasterToRunList.txt"), quote = FALSE, row.names = FALSE, sep = ",", col.names = FALSE)
 
 
 

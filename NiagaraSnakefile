@@ -134,6 +134,8 @@ rule runFirstStage:
         #! /bin/bash
         set +u;
         module load CCEnv  nixpkgs/16.09 gcc/8.3.0 r/4.0.0
+        module load CCEnv StdEnv/2020 r/4.2.1
+
         SCRATCH={scratch_dir} 
 
         MKL_NUM_THREADS=1 MKL_DOMAIN_NUM_THREADS=1 OMP_NUM_THREADS=1 CODE={code_dir}\
