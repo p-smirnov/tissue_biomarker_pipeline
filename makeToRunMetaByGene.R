@@ -1,5 +1,6 @@
 library(PharmacoGx)
 library(data.table)
+library(qs)
 
 method <- "perm"
 
@@ -37,9 +38,9 @@ colnames(toRun) <- c("Gene", "Tissue", "Drug", "PSet")
 
 toRunFirstStage <- unique(toRun[,.(PSet, Drug, Tissue)])
 
-toRunFirstStage[,sig.file.path := file.path(mySigDir, make.names(paste0("signature_", PSet, "_", Drug, "_", Tissue, ".rds")))]
+toRunFirstStage[,sig.file.path := file.path(mySigDir, make.names(paste0("signature_", PSet, "_", Drug, "_", Tissue, ".qs")))]
 
-toRunFirstStage[,sig.obj := lapply(sig.file.path, readRDS)]
+toRunFirstStage[,sig.obj := lapply(sig.file.path, qread)]
 
 # toRunFirstStageRes <- toRunFirstStage[,.(Gene = rownames(sig.obj[[1]]), 
 # 	Significant = sig.obj[[1]][,1,"significant"],

@@ -6,6 +6,7 @@
 library(PharmacoGx)
 library(RhpcBLASctl)
 library(data.table)
+library(qs)
 ## making sure that if R was compiled to run on multiple cores, each spawned thread only uses 1 of them
 print(RhpcBLASctl::blas_get_num_procs())
 RhpcBLASctl::blas_set_num_threads(1)
@@ -145,7 +146,7 @@ if(!file.exists(myOutDir)){
 	dir.create(myOutDir)
 }
 
-saveRDS(signature, file = file.path(myOutDir, make.names(paste0("signature_", psetName, "_", drug, "_", tissue, ".rds"))))
+qsave(signature, file = file.path(myOutDir, make.names(paste0("signature_", psetName, "_", drug, "_", tissue, ".rds"))))
 # ENSG00000000003,Bowel,5-Fluorouracil,CCLE.CTRPv2,
 
 ## after opt, without multicore correlations: 971.485 seconds

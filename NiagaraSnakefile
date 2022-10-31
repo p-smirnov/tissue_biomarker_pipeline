@@ -91,7 +91,7 @@ def getFirstStageOutput(wildcards):
         master_table  = pd.read_csv(f, header=None)
         # pd.read_csv("/cluster/projects/bhklab/Projects/Tissue_Biomarker_Meta/runlist_files/geneExpressionMasterToRunList.txt", header=None)
         fst = master_table.drop_duplicates([1,2,3])[[1,2,3]]
-        first_stage_ids = ['signature_{PSet}_{Drug}_{Tissue}.rds'.format(PSet = x[3], Tissue = x[1], Drug = x[2]) for (row,x) in fst.iterrows()]
+        first_stage_ids = ['signature_{PSet}_{Drug}_{Tissue}.qs'.format(PSet = x[3], Tissue = x[1], Drug = x[2]) for (row,x) in fst.iterrows()]
         first_stage_ids = cUFL(first_stage_ids)
         first_stage_ids = [signature_dir + "/" + x for x in first_stage_ids]
         fst['ids'] = first_stage_ids
@@ -111,7 +111,7 @@ checkpoint getSigGenes:
         """
         #! /bin/bash
         set +u;
-        module load CCEnv  nixpkgs/16.09 gcc/8.3.0 r/4.0.0
+        module load CCEnv StdEnv/2020 r/4.2.1
 
         MKL_NUM_THREADS=1 MKL_DOMAIN_NUM_THREADS=1 OMP_NUM_THREADS=1\
          PROJECT={project_dir} DATA={data_dir} Rscript {code_dir}/makeToRunMetaByGene.R {input.toRunFile}
@@ -128,12 +128,11 @@ rule runFirstStage:
     threads: 40
     # resources:
     #     time="24:00:00"
-    output: signature_dir + "/signature_{PSet}_{Drug}_{Tissue}.rds"
+    output: signature_dir + "/signature_{PSet}_{Drug}_{Tissue}.qs"
     shell:
         """
         #! /bin/bash
         set +u;
-        module load CCEnv  nixpkgs/16.09 gcc/8.3.0 r/4.0.0
         module load CCEnv StdEnv/2020 r/4.2.1
 
         SCRATCH={scratch_dir} 
@@ -164,7 +163,7 @@ rule hetTest:
         """
         #! /bin/bash
         set +u;
-        module load CCEnv  nixpkgs/16.09 gcc/8.3.0 r/4.0.0
+        module load CCEnv StdEnv/2020 r/4.2.1
         SCRATCH={scratch_dir} 
 
 
@@ -183,7 +182,7 @@ checkpoint evaluteHeterogeneity:
         """
         #! /bin/bash
         set +u;
-        module load CCEnv  nixpkgs/16.09 gcc/8.3.0 r/4.0.0
+        module load CCEnv StdEnv/2020 r/4.2.1
 
         MKL_NUM_THREADS=1 MKL_DOMAIN_NUM_THREADS=1 OMP_NUM_THREADS=1 PROJECT={project_dir} DATA={data_dir}\
          Rscript {code_dir}/makeToRunMetaByGeneForBoot.R {params.indir} {params.outdir}
@@ -201,7 +200,7 @@ checkpoint outputJuliaData:
         """
         #! /bin/bash
         set +u;
-        module load CCEnv  nixpkgs/16.09 gcc/8.3.0 r/4.0.0
+        module load CCEnv StdEnv/2020 r/4.2.1
         SCRATCH={scratch_dir} 
 
 
@@ -243,7 +242,7 @@ rule evaluateJuliaRes:
         """
         #! /bin/bash
         set +u;
-        module load CCEnv  nixpkgs/16.09 gcc/8.3.0 r/4.0.0
+        module load CCEnv StdEnv/2020 r/4.2.1
         SCRATCH={scratch_dir} 
         mkdir -p $containername/{boot_out_sig}
 
@@ -290,7 +289,7 @@ rule runFixedEffectTest:
         """
         #! /bin/bash
         set +u;
-        module load CCEnv  nixpkgs/16.09 gcc/8.3.0 r/4.0.0
+        module load CCEnv StdEnv/2020 r/4.2.1
         SCRATCH={scratch_dir} 
         R CMD SHLIB {code_dir}/metaPermC.c
         R CMD SHLIB {code_dir}/metaPermCTissue.c
