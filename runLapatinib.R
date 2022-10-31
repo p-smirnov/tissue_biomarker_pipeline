@@ -146,7 +146,7 @@ if(!file.exists(myOutDir)){
 	dir.create(myOutDir)
 }
 
-qsave(signature, file = file.path(myOutDir, make.names(paste0("signature_", psetName, "_", drug, "_", tissue, ".rds"))))
+qsave(signature, file = file.path(myOutDir, make.names(paste0("signature_", psetName, "_", drug, "_", tissue, ".qs"))))
 # ENSG00000000003,Bowel,5-Fluorouracil,CCLE.CTRPv2,
 
 ## after opt, without multicore correlations: 971.485 seconds
