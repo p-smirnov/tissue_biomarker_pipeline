@@ -4,7 +4,6 @@ LinearAlgebra.BLAS.set_num_threads(1)
 
 
 
-
 drug = ARGS[1]::String
 
 tissue = ARGS[2]::String
@@ -18,13 +17,23 @@ outPath = ARGS[5]::String
 
 nthread = 1::Int64  #40 threads faster than 80 on niagara
 
-modelData = DataFrame(CSV.File(filePath, pool=false));
+modelData = DataFrame(CSV.File(filePath, pool=false, types=Dict("x" => Float64, "dataset" => String)));
 
 select!(modelData, Not(:Column1));
 
 
-R = min(modelData[1,:R], 10000000);
+R = min(modelData[1, :R], 10000000);
+
 select!(modelData, Not(:R));
+
+if any(names(modelData) .== "tissueid") && length(unique(modelData[!, :tissueid])) < 2
+    select!(modelData, Not(:tissueid))
+end
+
+
+function scale(x::Array{Float64,1})::Array{Float64,1}
+    return (x .- mean(x)) / std(x)
+end
 
 
 function scale(x::Array{Float64,1})::Array{Float64,1}

@@ -31,6 +31,10 @@ drug <- "Crizotinib"
 tissue <- "Lymphoid"
 gene <- "ENSG00000069431"
 
+drug <- "Pictilisib"
+tissue <- "Esophagus/Stomach"
+gene <- "chr3:179218294:p.E542K"
+
 # psetName <- args[1]
 
 # drug <- "Lapatinib"
@@ -77,6 +81,8 @@ if(!is.na(containername)){
 
 
 codeDir <- args[7]
+
+
 dyn.load(file.path(codeDir,"metaPermC.so"))
 dyn.load(file.path(codeDir,"metaPermCTissue.so"))
 
@@ -85,49 +91,64 @@ badchars <- "[,]|[;]|[:]|[-]|[+]|[*]|[%]|[$]|[#]|[{]|[}]|[[]|[]]|[|]|[\\^]|[/]|[
 
 make.names.2 <- function(x) return(gsub(pat=badchars, rep=".", x))
 
+loadPSet <- function(psetName, tissue) {
+    switch(psetName,
+        CCLE = {
+            pset <- readRDS(file.path(myDataDir, "CCLE.rds"))
+        },
+        CCLE.CTRPv2 = {
+            pset <- readRDS(file.path(myDataDir, "CCLE.CTRPv2.rds"))
+        },
+        CCLE.PRISM = {
+            pset <- readRDS(file.path(myDataDir, "CCLE.PRISM.rds"))
+        },
+        GDSC_v1 = {
+            pset <- readRDS(file.path(myDataDir, "GDSC1.rds"))
+        },
+        GDSC_v2 = {
+            pset <- readRDS(file.path(myDataDir, "GDSC2.rds"))
+        },
+        gCSI = {
+            pset <- readRDS(file.path(myDataDir, "gCSI.rds"))
+        },
+        GRAY = {
+            pset <- readRDS(file.path(myDataDir, "GRAY.rds"))
+        },
+        UHNBreast = {
+            pset <- readRDS(file.path(myDataDir, "UHNBreast.rds"))
+        },
+        Tavor = {
+            pset <- readRDS(file.path(myDataDir, "Tavor.rds"))
+        },
+        BeatAML = {
+            pset <- readRDS(file.path(myDataDir, "BeatAML.rds"))
+        },
+        "FIMM-AML-MCM" = {
+            pset <- readRDS(file.path(myDataDir, "FIMM_MCM.rds"))
+        },
+        {
+            stop("Please Provide a valid pset")
+        }
+    )
 
-loadPSet <- function(psetName, tissue){
+    mData <- mDataNames(pset)
 
+    if (metadata(molecularProfiles(pset)[[mData]])$annotation %in% c("rna", "rnaseq")) {
+        ## microarray and rnaseq annotations have different column names
+        gene_type_col <- ifelse("GeneBioType" %in% colnames(featureInfo(pset, mData)), "GeneBioType", "gene_type")
+        ## limiting feature space for power
+        ft <- rownames(featureInfo(pset, mData))[featureInfo(pset, mData)[[gene_type_col]] %in% "protein_coding"]
+    } else {
+        ft <- rownames(featureInfo(pset, mData))
+    }
 
-	switch(psetName, 
-		CCLE = {
-			pset <- readRDS(file.path(myDataDir,"CCLE.rds"))
-		}, CCLE.CTRPv2 = {
-			pset <- readRDS(file.path(myDataDir,"CCLE.CTRPv2.rds"))
-		}, CCLE.PRISM = {
-	  	pset <- readRDS(file.path(myDataDir,"CCLE.PRISM.rds"))
-	  }, GDSC_v1 = {
-			pset <- readRDS(file.path(myDataDir,"GDSC1.rds"))
-		}, GDSC_v2 = {
-			pset <- readRDS(file.path(myDataDir,"GDSC2.rds"))
-		}, gCSI = {
-			pset <- readRDS(file.path(myDataDir,"gCSI.rds"))
-		}, GRAY = {
-			pset <- readRDS(file.path(myDataDir,"GRAY.rds"))
-		}, UHNBreast = {
-			pset <- readRDS(file.path(myDataDir,"UHNBreast.rds"))
-		}, Tavor = {
-			pset <- readRDS(file.path(myDataDir, "Tavor.rds"))
-		}, BeatAML = {
-			pset <- readRDS(file.path(myDataDir, "BeatAML.rds"))
-		}, "FIMM-AML-MCM" = {
-			pset <- readRDS(file.path(myDataDir, "FIMM_MCM.rds"))
-		}, {stop("Please Provide a valid pset")})
+    if (is.na(tissue) || tissue == "all") {
+        chosen.cells <- cellNames(pset)
+    } else {
+        chosen.cells <- cellNames(pset)[which(cellInfo(pset)$tissueid == tissue)]
+    }
 
-	mData <- mDataNames(pset)
-
-
-	gene_type_col <- ifelse("GeneBioType" %in% colnames(featureInfo(pset, mData)), "GeneBioType", "gene_type")
-
-	ft <- rownames(featureInfo(pset, mData))[which(featureInfo(pset, mData)[[gene_type_col]] == "protein_coding")]
-
-	if(is.na(tissue)||tissue=="all"){
-		chosen.cells <- cellNames(pset)
-	} else {
-		chosen.cells <- cellNames(pset)[which(cellInfo(pset)$tissueid == tissue)]
-	}
-
-	return(list(pset = pset, mData = mData, chosen.cells = chosen.cells))
+    return(list(pset = pset, mData = mData, chosen.cells = chosen.cells))
 }
 
 
@@ -149,9 +170,9 @@ total_gene_list <- toRunExtended[,unique(Gene)]
 
 # need to do this "trick" because names are made path safe, and arguments are derived from paths for snakemake's sake 
 if(as.logical(snakemake)){
-	drug <- unique(toRunExtended[,3])[make.names.2(unique(toRunExtended[,3])) == drug]
-  tissue <- unique(toRunExtended[,2])[make.names.2(unique(toRunExtended[,2])) == tissue]
-  gene <- unique(toRunExtended[,1])[make.names.2(unique(toRunExtended[,1])) == gene]
+	drug <- unique(toRunExtended[,Drug])[make.names.2(unique(toRunExtended[,Drug])) == drug]
+  tissue <- unique(toRunExtended[,Tissue])[make.names.2(unique(toRunExtended[,Tissue])) == tissue]
+  gene <- unique(toRunExtended[,Gene])[make.names.2(unique(toRunExtended[,Gene])) == gene]
 }
 
 
@@ -245,15 +266,20 @@ standardizeByDatasetInPerm <- function(iny,ds.vec){
 #     return(list(t0 = t0, t = t, R = R, pvalue = (sum(abs(t) > abs(t0)) + 1)/(length(t) + 1)))
 # }
 
+## I am pretty sure this works for binary data, but should be manually reviewed for sanity.
+
 # current timing, 10 seconds per 1e6, n=320
 ##FIXME:: not properly accounting for equality up to numerical precision here!
 permFixedEffectC <- function(model.data, R){
 
 	datasets <- unique(model.data[,"dataset"])
-	for(ds in datasets){
-		myx <- model.data[,"dataset"] == ds
-		model.data[myx,"x"] <- scale(model.data[myx,"x"])
-	}
+	# if(!isMut){
+		for (ds in datasets) {
+			myx <- model.data[, "dataset"] == ds
+			model.data[myx, "x"] <- scale(model.data[myx, "x"])
+		}
+	# }
+
 	ds.vec <- lapply(datasets, function(ds) return(model.data[,"dataset"] == ds))
 	denom  <- sum(model.data[,"x"]^2)
 	xt <- model.data[,"x"]/denom
@@ -412,8 +438,11 @@ x.list <- lapply(pset.list, function(pset.pars){
 	chosen.cells <- pset.pars$chosen.cells
 	mData <- pset.pars$mData
 
-	mol.prof <- assay(summarizeMolecularProfiles(pset, mData, cell.lines = chosen.cells))
-
+    if (metadata(molecularProfilesSlot(pset)[[mData]])$annotation == "mutation") {
+        mol.prof <- assay(summarizeMolecularProfiles(pset, mData, cell.lines = chosen.cells, summary.stat = "and"))
+    } else {
+        mol.prof <- assay(summarizeMolecularProfiles(pset, mData, cell.lines = chosen.cells))
+    }
 	if(grepl(pat="ENSG", x=gene)){
 			myx <- grep(paste0("^", gene, "(\\.[0-9]+)?$"), rownames(mol.prof))
 	} else {
@@ -459,6 +488,12 @@ model.data <- data.frame(x = unlist(x.list),
 
 model.data <- model.data[complete.cases(model.data),]
 
+isMut <- !is.numeric(model.data$x)
+if (isMut) {
+    model.data$x <- as.numeric(model.data$x)
+}
+
+
 
 if(!sum(table(model.data[,"dataset"]) > 20) > 2){
     print(paste0("Skipping gene: ", gene))
@@ -495,8 +530,8 @@ getBootSample <- function(model.data, scale=TRUE){
   sampled.data <- lapply(names(sampled.datasets), function(dt){
     sm.dt <- model.data[sample(which(model.data$dataset == sampled.datasets[dt]), replace=TRUE), ]
     sm.dt$dataset <- dt
-        sm.dt[,1] <- scale(sm.dt[,1])
-        sm.dt[,2] <- scale(sm.dt[,2])
+    sm.dt[,1] <- scale(sm.dt[,1])
+    sm.dt[,2] <- scale(sm.dt[,2])
     return(sm.dt)
     })
   sampled.data <- do.call(rbind, sampled.data)

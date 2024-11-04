@@ -31,7 +31,6 @@ badchars <- "[,]|[;]|[:]|[-]|[+]|[*]|[%]|[$]|[#]|[{]|[}]|[[]|[]]|[|]|[\\^]|[/]|[
 make.names.2 <- function(x) return(gsub(pat=badchars, rep=".", x))
 
 
-
 R  <- as.numeric(args[4]) ## TODO: need method to pick this
 
 
@@ -51,6 +50,9 @@ print(gene)
 
 containername <- Sys.getenv("containername", unset=NA_character_)
 snakemake <- as.numeric(Sys.getenv("SNAKEMAKE", unset=0))
+
+
+
 
 
 if(!is.na(containername)){
@@ -94,10 +96,14 @@ loadPSet <- function(psetName, tissue){
 
 	mData <- mDataNames(pset)
 
-
-	gene_type_col <- ifelse("GeneBioType" %in% colnames(featureInfo(pset, mData)), "GeneBioType", "gene_type")
-
-	ft <- rownames(featureInfo(pset, mData))[which(featureInfo(pset, mData)[[gene_type_col]] == "protein_coding")]
+	if (metadata(molecularProfiles(pset)[[mData]])$annotation %in% c("rna", "rnaseq")) {
+		## microarray and rnaseq annotations have different column names
+		gene_type_col <- ifelse("GeneBioType" %in% colnames(featureInfo(pset, mData)), "GeneBioType", "gene_type") 
+		## limiting feature space for power
+		ft <- rownames(featureInfo(pset, mData))[featureInfo(pset, mData)[[gene_type_col]] %in% "protein_coding"]
+	} else {
+		ft <- rownames(featureInfo(pset, mData))
+	}
 
 	if(is.na(tissue)||tissue=="all"){
 		chosen.cells <- cellNames(pset)
@@ -160,8 +166,11 @@ psetMolProf <- lapply(pset.list, function(pset.pars){
 	pset <- pset.pars$pset
 	chosen.cells <- pset.pars$chosen.cells
 	mData <- pset.pars$mData
-
-	mol.prof <- assay(summarizeMolecularProfiles(pset, mData, cell.lines = chosen.cells))
+	if(metadata(molecularProfilesSlot(pset)[[mData]])$annotation =='mutation'){
+        mol.prof <- assay(summarizeMolecularProfiles(pset, mData, cell.lines = chosen.cells, summary.stat = "and"))
+	} else {
+		mol.prof <- assay(summarizeMolecularProfiles(pset, mData, cell.lines = chosen.cells))
+	}
 	return(mol.prof)
 })
 
@@ -234,7 +243,9 @@ regressOutTissueAndScale <- function(model.data){
 
 
 		}
-		model.data[myx,"x"] <- scale(model.data[myx, "x"])
+		if(is.numeric(model.data[myx,"x"])){
+  			model.data[myx, "x"] <- scale(model.data[myx, "x"])
+		}
 		model.data[myx,"y"] <- scale(model.data[myx, "y"])
 
 	}
@@ -242,7 +253,13 @@ regressOutTissueAndScale <- function(model.data){
 }
 
 
+
+
+## x is already an indicator variable, we don't want to treat it as two categories. 
+if (metadata(molecularProfiles(pset.list[[1]]$pset)[[pset.list[[1]]$mData]])$annotation %in% c("mutation")) model.data$x <- as.numeric(model.data$x) 
 model.data <- regressOutTissueAndScale(model.data)
+
+
 
 if(sum(table(model.data[,"dataset"]) >= 20) > 2){
 	lmer1 <- lmer(y~(x + 0| dataset) + x + 0, model.data)

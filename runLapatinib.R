@@ -110,10 +110,15 @@ switch(psetName,
 ## datasets used are subsetted to a single data type for efficiency. Maybe this should be passed in from config?
 mData <- mDataNames(pset) 
 
+if( metadata(molecularProfiles(pset)[[mData]])$annotation %in% c("rna", "rnaseq")){
 ## microarray and rnaseq annotations have different column names
-gene_type_col <- ifelse("GeneBioType" %in% colnames(featureInfo(pset, mData)), "GeneBioType", "gene_type") 
-## limiting feature space for power
-ft <- rownames(featureInfo(pset, mData))[featureInfo(pset, mData)[[gene_type_col]] %in% "protein_coding"]
+	gene_type_col <- ifelse("GeneBioType" %in% colnames(featureInfo(pset, mData)), "GeneBioType", "gene_type")
+	## limiting feature space for power
+	ft <- rownames(featureInfo(pset, mData))[featureInfo(pset, mData)[[gene_type_col]] %in% "protein_coding"]
+
+} else {
+  ft <- rownames(featureInfo(pset, mData))
+}
 
 
 
@@ -137,10 +142,24 @@ filteredFeatureList <- toRun[PSet == psetName, unique(Gene)]
 
 ft <- ft[gsub(x=ft, pat="\\.[0-9]+$", rep="") %in% filteredFeatureList]
 
-## run the permutation test for each gene in ft, for the drug and tissue selected. 
-signature <- drugSensitivitySig(pset, mData, drugs=drug, features=ft,
-	sensitivity.measure = "aac_recomputed", modeling.method="pearson", 
-	inference.method="resampling", cells=chosen.cells, nthread=nthread, parallel.on = "gene")
+
+## run the permutation test for each gene in ft, for the drug and tissue selected.
+if (metadata(molecularProfiles(pset)[[mData]])$annotation == "mutation") {
+    signature <- drugSensitivitySig(pset, mData,
+        drugs = drug, features = ft,
+		molecular.summary.stat = "and", 
+        sensitivity.measure = "aac_recomputed", modeling.method = "pearson",
+        inference.method = "resampling", cells = chosen.cells, nthread = nthread, parallel.on = "gene"
+    )
+} else {
+        signature <- drugSensitivitySig(pset, mData,
+            drugs = drug, features = ft,
+            sensitivity.measure = "aac_recomputed", modeling.method = "pearson",
+            inference.method = "resampling", cells = chosen.cells, nthread = nthread, parallel.on = "gene"
+        )
+}
+
+
 
 if(!file.exists(myOutDir)){
 	dir.create(myOutDir)

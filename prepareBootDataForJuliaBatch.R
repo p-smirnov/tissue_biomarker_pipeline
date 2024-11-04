@@ -59,48 +59,57 @@ if(!is.na(containername)){
 }
 
 
-
-
-loadPSet <- function(psetName, tissue){
-
-
-    switch(psetName, 
-           CCLE = {
-                pset <- readRDS(file.path(myDataDir,"CCLE.rds"))
-           }, CCLE.CTRPv2 = {
-                pset <- readRDS(file.path(myDataDir,"CCLE.CTRPv2.rds"))
-           }, CCLE.PRISM = {
-                pset <- readRDS(file.path(myDataDir,"CCLE.PRISM.rds"))
-           }, GDSC_v1 = {
-                pset <- readRDS(file.path(myDataDir,"GDSC1.rds"))
-           }, GDSC_v2 = {
-                pset <- readRDS(file.path(myDataDir,"GDSC2.rds"))
-           }, gCSI = {
-                pset <- readRDS(file.path(myDataDir,"gCSI.rds"))
-           }, GRAY = {
-                pset <- readRDS(file.path(myDataDir,"GRAY.rds"))
-           }, UHNBreast = {
-                pset <- readRDS(file.path(myDataDir,"UHNBreast.rds"))
-           }, Tavor = {
-                pset <- readRDS(file.path(myDataDir, "Tavor.rds"))
-           }, BeatAML = {
-                pset <- readRDS(file.path(myDataDir, "BeatAML.rds"))
-           }, "FIMM-AML-MCM" = {
+loadPSet <- function(psetName) {
+    switch(psetName,
+        CCLE = {
+            pset <- readRDS(file.path(myDataDir, "CCLE.rds"))
+        },
+        CCLE.CTRPv2 = {
+            pset <- readRDS(file.path(myDataDir, "CCLE.CTRPv2.rds"))
+        },
+        CCLE.PRISM = {
+            pset <- readRDS(file.path(myDataDir, "CCLE.PRISM.rds"))
+        },
+        GDSC_v1 = {
+            pset <- readRDS(file.path(myDataDir, "GDSC1.rds"))
+        },
+        GDSC_v2 = {
+            pset <- readRDS(file.path(myDataDir, "GDSC2.rds"))
+        },
+        gCSI = {
+            pset <- readRDS(file.path(myDataDir, "gCSI.rds"))
+        },
+        GRAY = {
+            pset <- readRDS(file.path(myDataDir, "GRAY.rds"))
+        },
+        UHNBreast = {
+            pset <- readRDS(file.path(myDataDir, "UHNBreast.rds"))
+        },
+        Tavor = {
+            pset <- readRDS(file.path(myDataDir, "Tavor.rds"))
+        },
+        BeatAML = {
+            pset <- readRDS(file.path(myDataDir, "BeatAML.rds"))
+        },
+        "FIMM-AML-MCM" = {
             pset <- readRDS(file.path(myDataDir, "FIMM_MCM.rds"))
-           }, {stop("Please Provide a valid pset")})
+        },
+        {
+            stop("Please Provide a valid pset")
+        }
+    )
 
     mData <- mDataNames(pset)
 
-
-    gene_type_col <- ifelse("GeneBioType" %in% colnames(featureInfo(pset, mData)), "GeneBioType", "gene_type")
-
-    ft <- rownames(featureInfo(pset, mData))[which(featureInfo(pset, mData)[[gene_type_col]] == "protein_coding")]
-
-    # if(is.na(tissue)){
-    #   chosen.cells <- cellNames(pset)
-    # } else {
-    #   chosen.cells <- cellNames(pset)[which(cellInfo(pset)$tissueid == tissue)]
-    # }
+    if (metadata(molecularProfiles(pset)[[mData]])$annotation %in% c("rna", "rnaseq")) {
+        ## microarray and rnaseq annotations have different column names
+        gene_type_col <- ifelse("GeneBioType" %in% colnames(featureInfo(pset, mData)), "GeneBioType", "gene_type")
+        ## limiting feature space for power
+        ft <- rownames(featureInfo(pset, mData))[featureInfo(pset, mData)[[gene_type_col]] %in% "protein_coding"]
+    } else {
+        ft <- rownames(featureInfo(pset, mData))
+    }
+    ## Note, no subset by tissue here as we do it later
 
     return(list(pset = pset, mData = mData))
 }
@@ -136,8 +145,11 @@ mol.list <- lapply(pset.list, function(pset.pars){
     pset <- pset.pars$pset
     mData <- pset.pars$mData
 
-    mol.prof <- assay(summarizeMolecularProfiles(pset, mData))
-
+    if (metadata(molecularProfilesSlot(pset)[[mData]])$annotation == "mutation") {
+        mol.prof <- assay(summarizeMolecularProfiles(pset, mData, summary.stat = "and"))
+    } else {
+        mol.prof <- assay(summarizeMolecularProfiles(pset, mData))
+    }
     return(mol.prof)
 
 })

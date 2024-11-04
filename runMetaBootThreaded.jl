@@ -18,7 +18,8 @@ outFileName = ARGS[5]
 
 # nthread = 1::Int64  #40 threads faster than 80 on niagara
 
-modelData = DataFrame(CSV.File(filePath, pool=false));
+
+modelData = DataFrame(CSV.File(filePath, pool=false, types=Dict("x" => Float64, "dataset" => String)));
 
 select!(modelData, Not(:Column1));
 
@@ -27,19 +28,32 @@ R = min(modelData[1,:R], 10000000);
 
 select!(modelData, Not(:R));
 
+if any(names(modelData) .== "tissueid") && length(unique(modelData[!, :tissueid])) < 2
+    select!(modelData, Not(:tissueid));
+end
+
 
 function scale(x::Array{Float64,1})::Array{Float64,1}
     return (x .- mean(x))/std(x)
 end
 
+# TODO:: figure out why I have tissue ids???
 
 function sampleWithinDataset(modelData::DataFrame, dataset)::DataFrame
     myDS = findall(modelData[!,:dataset].==dataset);
     nDS = length(myDS);
-    myx = rand(1:nDS, nDS);
-    myDS = myDS[myx];
-    datasetData = modelData[myDS,:];
-    if any(names(datasetData).=="tissueid")
+    success = false;
+    datasetData = modelData;
+    while !success
+        myx = rand(1:nDS, nDS)
+        myDS2 = myDS[myx];
+        datasetData = copy(modelData[myDS2, :])
+        success = length(unique(datasetData[!,:x])) > 1;
+        # if !success
+        #     println("resampling");
+        # end
+    end
+    if any(names(datasetData) .== "tissueid")
         tissues = unique(modelData[!,:tissueid])
         for tissue = tissues
             datasetData=removeTissueMean!(datasetData, tissue);
@@ -92,8 +106,8 @@ function standardizeByDataset(modelData::DataFrame)
     return standardized
 end
 
-
 t = zeros(R);
+print("starting calcs")
 
 Threads.@threads for i = 1:R::Int64
     resampled = getBootSample(modelData);
@@ -114,7 +128,6 @@ end
 # this takes 8 seconds for 1e4, seems to scale linearly from here. 20x improvement!
 # threaded on 40 threads, performance pan-cancer is 100000 in 94 seconds.
 modelData2 = standardizeByDataset(modelData);
-
 m0 = fit(LinearMixedModel, @formula(y ~ (x + 0| dataset) + x + 0), modelData2);
 t0 = coef(m0)[1];
 

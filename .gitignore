@@ -5,3 +5,4 @@ Data
 .snakemake
 *.txt
 slurm
+*vscode*

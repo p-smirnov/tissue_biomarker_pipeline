@@ -43,14 +43,22 @@ toRunFirstStage[,sig.file.path := file.path(mySigDir, make.names(paste0("signatu
 toRunFirstStage[,sig.obj := lapply(sig.file.path, qread)]
 
 # toRunFirstStageRes <- toRunFirstStage[,.(Gene = rownames(sig.obj[[1]]), 
-# 	Significant = sig.obj[[1]][,1,"significant"],
+# 	Significant = sig.obj[[1]][,1,"significant"],ls
 # Estimate = sig.obj[[1]][,1,"estimate"]), .(PSet, Drug, Tissue)]
+
+# toRunFirstStageResEstimates <- toRunFirstStage[, .(
+#     Gene = rownames(sig.obj[[1]]),
+#     estimate = sig.obj[[1]][, 1, "estimate"]
+# ), .(PSet, Drug, Tissue)]
 
 
 toRunFirstStageRes <- toRunFirstStage[,.(Gene = rownames(sig.obj[[1]]), 
 	Significant = sig.obj[[1]][,1,"significant"]), .(PSet, Drug, Tissue)]
 
-toRunFirstStageRes[,Gene := gsub(Gene, pat="\\..+", rep="")]
+if(any(grepl(x=toRunFirstStageRes$Gene, pat='ENSG[0-9]+\\..'))){
+  toRunFirstStageRes[, Gene := gsub(Gene, pat = "\\..+", rep = "")]
+  #remove version numbers from gene names
+}
 
 toRunFirstStageRes <- merge(toRun, toRunFirstStageRes, by=c("Gene", "Tissue", "Drug", "PSet"), all.x=TRUE)
 

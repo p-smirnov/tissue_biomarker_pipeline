@@ -258,7 +258,6 @@ double runPerm(double *out, double *xvec, double *yvec, double obsCor,
 
     currCor = 0;
 
-    // TODO: figure out the proper multiplication here
     // TODO: make sure this is numerically sensible???
 
     for(int j = 0; j < N; j++){
@@ -277,7 +276,6 @@ double runPerm(double *out, double *xvec, double *yvec, double obsCor,
     i++;
   }
 
-  // TODO:: Figure out how the 0 based indexing affects calculation of the pvalues
   // printf("%ld\n", totalSeenLarger);
 
   free(permIdxY);

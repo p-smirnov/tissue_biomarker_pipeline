@@ -1,0 +1,8 @@
+master_table: "/home/psmirnov/Code/tissue_biomarker/MutationByGeneMasterToRunList.txt"
+scratch_dir: "/home/psmirnov/Data/scratch"
+project_dir: "/home/psmirnov/Code/Tissue-Biomarker"
+data_dir: "/home/psmirnov/Data/TBPInputs"
+molDataType: "mut_gene"
+max_first_stage_perm: "1e8"
+code_dir: "/home/psmirnov/Code/tissue_biomarker_pipeline"
+julia_working_dir: "/home/psmirnov"
