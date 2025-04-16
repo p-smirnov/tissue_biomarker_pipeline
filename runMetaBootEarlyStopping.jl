@@ -88,38 +88,42 @@ t = zeros(R);
 
 i = 1::Int64;
 while i <= R
-    jj = 1::Int64;
-    while jj < (numPerLoop+1)::Int64
-        resampled = getBootSample(modelData);
-        nDSS = length(unique(resampled[!,:dataset]));
-        if nDSS > one(nDSS)
-            @suppress begin
-                m1 = fit(LinearMixedModel, @formula(y ~ (x + 0| dataset) + x + 0), resampled);
-                t[i] = coef(m1)[1];
+    # jj = 1::Int64;
+    @suppress begin
+        Threads.@threads for jj = 0:(numPerLoop-1)::Int64
+            resampled = getBootSample(modelData);
+            nDSS = length(unique(resampled[!,:dataset]));
+            if nDSS > one(nDSS)
+                    m1 = fit(LinearMixedModel, @formula(y ~ (x + 0| dataset) + x + 0), resampled);
+                    t[i+jj] = coef(m1)[1];
+                # end
+            else
+                # @suppress begin
+                    m1 = fit(LinearModel, @formula(y ~ x + 0), resampled);
+                    t[i+jj] = coef(m1)[1];
+                # end
             end
-        else
-            @suppress begin
-                m1 = fit(LinearModel, @formula(y ~ x + 0), resampled);
-                t[i] = coef(m1)[1];
-            end
+            # global i = i + 1;
+            # jj = jj + 1;
         end
-        i = i + 1;
-        jj = jj + 1;
     end
+    global i = i + numPerLoop;
     if t0 > 0
         numOverZero = sum(t[1:(i-1)] .< 0);
     else 
         numOverZero = sum(t[1:(i-1)] .> 0);
     end
     p_hat = numOverZero / (i-1);
-    margin = 1.96 * sqrt(p_hat * (1 - p_hat) / (i - 1)); ## 95% confidence interval
+    margin = 2.576 * sqrt(p_hat * (1 - p_hat) / (i - 1)) ## 99% confidence interval
     if p_hat - margin > 0.05
-        print("Early stopping at $i out of $R using 95% CI bounding p value larger than 0.05\n")
+        print("Early stopping at $i out of $R using 99% CI bounding p value larger than 0.05\n")
         break
     end
 end
 
+
 t = t[1:(i-1)];
+R = i - 1;
 
 # this takes 8 seconds for 1e4, seems to scale linearly from here. 20x improvement!
 
